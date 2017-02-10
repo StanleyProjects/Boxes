@@ -1,5 +1,6 @@
 package stan.boxes;
 
+import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -13,7 +14,9 @@ public class App
     static public void main(String[] args)
     {
         log("\n\tbegin");
-    	String fullPath = "C:/Users/toha/data/stanleyprojects/boxes/transactionsbox";
+    	String path = System.getProperty("user.home")+"/stan/boxes";
+    	new File(path).mkdirs();
+    	String fullPath = path+"/transactionsbox";
         transactionsBox = new Box<Transaction>(new ORM<Transaction>()
 			{
 				public Map write(Transaction data)
@@ -26,12 +29,10 @@ public class App
 				}
 				public Transaction read(Map map)
 				{
-					Transaction transaction = new Transaction(
+					return new Transaction(
 							Long.valueOf((Long)map.get("id")).intValue()
 							,Long.valueOf((Long)map.get("count")).intValue()
-							,(Long)map.get("date")
-						);
-					return transaction;
+							,(Long)map.get("date"));
 				}
 			}, fullPath);
         log("size: " + transactionsBox.getAll().size());
@@ -44,19 +45,27 @@ public class App
         		+"\n\t\tdate " + transactions.get(i).getDate()
         		);
         }
+        //clear();
         //add();
         //query();
         //queryOrder();
         //queryRange();
         //queryOrderRange();
+        //replace();
         //removeFirst();
         //removeAll();
         log("\n\tend");
     }
     static private void add()
     {
-        Transaction transaction = new Transaction(nextInt(),nextInt(100),System.currentTimeMillis());
-        transactionsBox.add(transaction);
+        transactionsBox.add(
+        	new Transaction(nextInt(),nextInt(100),System.currentTimeMillis())
+        	,new Transaction(nextInt(),nextInt(100),System.currentTimeMillis())
+        	,new Transaction(nextInt(),nextInt(100),System.currentTimeMillis())
+        	,new Transaction(nextInt(),nextInt(100),System.currentTimeMillis())
+        	,new Transaction(nextInt(),nextInt(100),System.currentTimeMillis())
+        	,new Transaction(nextInt(),nextInt(100),System.currentTimeMillis())
+        	);
         log("size after add: " + transactionsBox.getAll().size());
     }
     static private void query()
@@ -171,6 +180,40 @@ public class App
         		);
         }
     }
+    static private void replace()
+    {
+        transactionsBox.add(new Transaction(1,nextInt(100),System.currentTimeMillis()));
+        transactionsBox.add(new Transaction(2,nextInt(100),System.currentTimeMillis()));
+        transactionsBox.add(new Transaction(3,nextInt(100),System.currentTimeMillis()));
+        transactionsBox.add(new Transaction(4,nextInt(100),System.currentTimeMillis()));
+        log("size after add: " + transactionsBox.getAll().size());
+        List<Transaction> transactions = transactionsBox.getAll();
+        for(int i=0; i<transactions.size(); i++)
+        {
+        	log("\ttransaction:"
+        		+"\n\t\tid " + transactions.get(i).getId()
+        		+"\n\t\tcount " + transactions.get(i).getCount()
+        		+"\n\t\tdate " + transactions.get(i).getDate()
+        		);
+        }
+        transactionsBox.replace(new Query<Transaction>()
+        	{
+        		public boolean query(Transaction transaction)
+        		{
+        			return transaction.getId() == 3;
+        		}
+        	}, new Transaction(3,-25,-100));
+        log("size after replace: " + transactionsBox.getAll().size());
+        transactions = transactionsBox.getAll();
+        for(int i=0; i<transactions.size(); i++)
+        {
+        	log("\ttransaction:"
+        		+"\n\t\tid " + transactions.get(i).getId()
+        		+"\n\t\tcount " + transactions.get(i).getCount()
+        		+"\n\t\tdate " + transactions.get(i).getDate()
+        		);
+        }
+    }
     static private void removeFirst()
     {
         transactionsBox.removeFirst(new Query<Transaction>()
@@ -210,6 +253,11 @@ public class App
         		+"\n\t\tdate " + transactions.get(i).getDate()
         		);
         }
+    }
+    static private void clear()
+    {
+    	transactionsBox.clear();
+        log("size after clear: " + transactionsBox.getAll().size());
     }
 
     static private final Random random = new Random();

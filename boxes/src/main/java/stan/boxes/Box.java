@@ -25,14 +25,11 @@ public class Box<DATA>
     private final String fullPath;
     private final JSONParser parser = new JSONParser();
     private final Queue<Runnable> runnableQueue = new PriorityQueue<Runnable>();
-    private final Map emptyBox;
 
     public Box(ORM<DATA> o, String fp)
     {
         orm = o;
         fullPath = fp;
-        emptyBox = new HashMap();
-        emptyBox.put("list", new Object[]{});
         /*
         addWork(new Runnable()
             {
@@ -56,8 +53,10 @@ public class Box<DATA>
             try
             {
                 boxFile.createNewFile();
-                emptyBox.put("date", System.currentTimeMillis());
-                write(fullPath, JSONWriter.write(emptyBox));
+                Map map = new HashMap();
+                map.put("list", new Object[]{});
+                map.put("date", System.currentTimeMillis());
+                write(fullPath, JSONWriter.write(map));
             }
             catch(IOException e)
             {
@@ -82,8 +81,10 @@ public class Box<DATA>
         {
             try
             {
-                emptyBox.put("date", System.currentTimeMillis());
-                write(fullPath, JSONWriter.write(emptyBox));
+                Map map = new HashMap();
+                map.put("list", new Object[]{});
+                map.put("date", System.currentTimeMillis());
+                write(fullPath, JSONWriter.write(map));
             }
             catch(IOException ex)
             {
@@ -116,8 +117,10 @@ public class Box<DATA>
         {
             try
             {
-                emptyBox.put("date", System.currentTimeMillis());
-                write(fullPath, JSONWriter.write(emptyBox));
+                Map map = new HashMap();
+                map.put("list", new Object[]{});
+                map.put("date", System.currentTimeMillis());
+                write(fullPath, JSONWriter.write(map));
             }
             catch(IOException ex)
             {
@@ -144,10 +147,30 @@ public class Box<DATA>
         List<DATA> list = get(query, comparator);
         return list.subList(range.getStart(), range.getStart() + range.getCount());
     }
-    public void add(DATA data)
+    public void add(DATA... datas)
+    {
+        if(datas == null || datas.length == 0)
+        {
+            return;
+        }
+        List<DATA> list = getAll();
+        for(DATA d : datas)
+        {
+            list.add(d);
+        }
+        save(list);
+    }
+    public void replace(Query<DATA> query, DATA data)
     {
         List<DATA> list = getAll();
-        list.add(data);
+        for(int i=0; i<list.size(); i++)
+        {
+            if(query.query(list.get(i)))
+            {
+                list.set(i, data);
+                break;
+            }
+        }
         save(list);
     }
     public void removeFirst(Query<DATA> query)
@@ -179,6 +202,19 @@ public class Box<DATA>
             }
         }
         save(list);
+    }
+    public void clear()
+    {
+        Map map = new HashMap();
+        map.put("list", new Object[]{});
+        map.put("date", System.currentTimeMillis());
+        try
+        {
+            write(fullPath, JSONWriter.write(map));
+        }
+        catch(IOException ex)
+        {
+        }
     }
     private void save(List<DATA> list)
     {
