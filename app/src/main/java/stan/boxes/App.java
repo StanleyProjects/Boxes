@@ -11,12 +11,13 @@ import java.util.Random;
 public class App
 {
     static private Box<Transaction> transactionsBox;
+    static private Case<Settings> settingsCase;
     static public void main(String[] args)
     {
         log("\n\tbegin");
     	String path = System.getProperty("user.home")+"/stan/boxes";
     	new File(path).mkdirs();
-    	String fullPath = path+"/transactionsbox";
+    	/*
         transactionsBox = new Box<Transaction>(new ORM<Transaction>()
 			{
 				public Map write(Transaction data)
@@ -34,7 +35,7 @@ public class App
 							,Long.valueOf((Long)map.get("count")).intValue()
 							,(Long)map.get("date"));
 				}
-			}, fullPath);
+			}, path+"/transactionsbox");
         log("size: " + transactionsBox.getAll().size());
         List<Transaction> transactions = transactionsBox.getAll();
         for(int i=0; i<transactions.size(); i++)
@@ -45,7 +46,33 @@ public class App
         		+"\n\t\tdate " + transactions.get(i).getDate()
         		);
         }
-        //clear();
+        */
+        settingsCase = new Case<Settings>(new Settings(0, null, 0), new ORM<Settings>()
+			{
+				public Map write(Settings data)
+				{
+        			Map map = new HashMap();
+        			map.put("time", data.getTime());
+        			map.put("name", data.getName());
+        			map.put("color", data.getColor());
+					return map;
+				}
+				public Settings read(Map map)
+				{
+					return new Settings((Long)map.get("time")
+						,(String)map.get("name")
+						,Long.valueOf((Long)map.get("color")).intValue());
+				}
+			}, path+"/settingscase");
+        Settings settings = settingsCase.get();
+        	log("\tsettings:"
+        		+"\n\t\ttime " + settings.getTime()
+        		+"\n\t\tname " + settings.getName()
+        		+"\n\t\tcolor " + settings.getColor()
+        		);
+        clearSettings();
+        //save();
+        //clearBox();
         //add();
         //query();
         //queryOrder();
@@ -55,6 +82,26 @@ public class App
         //removeFirst();
         //removeAll();
         log("\n\tend");
+    }
+    static private void save()
+    {
+        settingsCase.save(new Settings(System.currentTimeMillis(), nextString(), nextInt()));
+        Settings settings = settingsCase.get();
+        	log("\tsettings after save:"
+        		+"\n\t\ttime " + settings.getTime()
+        		+"\n\t\tname " + settings.getName()
+        		+"\n\t\tcolor " + settings.getColor()
+        		);
+    }
+    static private void clearSettings()
+    {
+        settingsCase.clear();
+        Settings settings = settingsCase.get();
+        	log("\tsettings after clear:"
+        		+"\n\t\ttime " + settings.getTime()
+        		+"\n\t\tname " + settings.getName()
+        		+"\n\t\tcolor " + settings.getColor()
+        		);
     }
     static private void add()
     {
@@ -254,7 +301,7 @@ public class App
         		);
         }
     }
-    static private void clear()
+    static private void clearBox()
     {
     	transactionsBox.clear();
         log("size after clear: " + transactionsBox.getAll().size());
