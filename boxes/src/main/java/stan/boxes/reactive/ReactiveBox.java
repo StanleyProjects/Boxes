@@ -1,4 +1,4 @@
-package stan.boxes;
+package stan.boxes.reactive;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,22 +12,37 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
+import stan.boxes.ORM;
+import stan.boxes.Query;
+import stan.boxes.Range;
 import stan.boxes.json.JSONParser;
 import stan.boxes.json.JSONWriter;
 import stan.boxes.json.ParseException;
 
-public class Box<DATA>
+public class ReactiveBox<DATA>
 {
+    private final List<DATA> allData;
     private final ORM<DATA> orm;
     private final String fullPath;
     private final JSONParser parser = new JSONParser();
+    private final Queue<Runnable> runnableQueue = new PriorityQueue<Runnable>();
+    private final Runnable saveWork = new Runnable()
+    {
+        public void run()
+        {
+            save();
+        }
+    };
 
-    public Box(ORM<DATA> o, String fp)
+    public ReactiveBox(ORM<DATA> o, String fp)
     {
         orm = o;
         fullPath = fp;
         createNewFile();
+        allData = getAllData();
     }
     private void createNewFile()
     {
@@ -45,10 +60,9 @@ public class Box<DATA>
             catch(IOException e)
             {
             }
-        } 
+        }
     }
-
-    public List<DATA> getAll()
+    private List<DATA> getAllData()
     {
         try
         {
@@ -81,133 +95,132 @@ public class Box<DATA>
         return new ArrayList<DATA>();
     }
 
-    public List<DATA> get(Query<DATA> query)
+    public ListModel<DATA> getAll()
     {
-        try
-        {
-            String data = read(fullPath);
-            Map map = (Map)parser.parse(data);
-            List convert = (List)map.get("list");
-            List<DATA> list = new ArrayList<DATA>(convert.size());
-            for(int i=0; i<convert.size(); i++)
-            {
-                DATA tmp = orm.read((Map)convert.get(i));
-                if(query.query(tmp))
-                {
-                    list.add(tmp); 
-                }
-            }
-            return list;
-        }
-        catch(ParseException e)
-        {
-            try
-            {
-                Map map = new HashMap();
-                map.put("list", new Object[]{});
-                map.put("date", System.currentTimeMillis());
-                write(fullPath, JSONWriter.write(map));
-            }
-            catch(IOException ex)
-            {
-            }
-        }
-        catch(IOException e)
-        {
-        }
-        return new ArrayList<DATA>();
+        return new ArrayListModel<DATA>(allData);
     }
-    public List<DATA> get(Query<DATA> query, Comparator<DATA> comparator)
+
+    public ListModel<DATA> get(Query<DATA> query)
     {
-        List<DATA> list = get(query);
+        return new ArrayListModel<DATA>(query(query));
+    }
+    public ListModel<DATA> get(Query<DATA> query, Comparator<DATA> comparator)
+    {
+        List<DATA> list = query(query);
         Collections.sort(list, comparator);
+        return new ArrayListModel<DATA>(list);
+    }
+    public ListModel<DATA> get(Query<DATA> query, Range range)
+    {
+        List<DATA> list = query(query);
+        return new ArrayListModel<DATA>(list.subList(range.getStart(), range.getStart() + range.getCount()));
+    }
+    public ListModel<DATA> get(Query<DATA> query, Comparator<DATA> comparator, Range range)
+    {
+        List<DATA> list = query(query);
+        Collections.sort(list, comparator);
+        return new ArrayListModel<DATA>(list.subList(range.getStart(), range.getStart() + range.getCount()));
+    }
+    private List<DATA> query(Query<DATA> query)
+    {
+        List<DATA> list = new ArrayList<DATA>();
+        for(int i=0; i<allData.size(); i++)
+        {
+            if(query.query(allData.get(i)))
+            {
+                list.add(allData.get(i)); 
+            }
+        }
         return list;
     }
-    public List<DATA> get(Query<DATA> query, Range range)
-    {
-        List<DATA> list = get(query);
-        return list.subList(range.getStart(), range.getStart() + range.getCount());
-    }
-    public List<DATA> get(Query<DATA> query, Comparator<DATA> comparator, Range range)
-    {
-        List<DATA> list = get(query, comparator);
-        return list.subList(range.getStart(), range.getStart() + range.getCount());
-    }
+
     public void add(DATA... datas)
     {
         if(datas == null || datas.length == 0)
         {
             return;
         }
-        List<DATA> list = getAll();
-        for(DATA d : datas)
+        synchronized(allData)
         {
-            list.add(d);
+            for(DATA d : datas)
+            {
+                allData.add(d);
+            }
         }
-        save(list);
+        addWork(saveWork);
     }
     public void replace(Query<DATA> query, DATA data)
     {
-        List<DATA> list = getAll();
-        for(int i=0; i<list.size(); i++)
+        boolean replace = false;
+        for(int i=0; i<allData.size(); i++)
         {
-            if(query.query(list.get(i)))
+            if(query.query(allData.get(i)))
             {
-                list.set(i, data);
+                allData.set(i, data);
+                replace = true;
                 break;
             }
         }
-        save(list);
+        if(replace)
+        {
+            addWork(saveWork);
+        }
     }
     public void removeFirst(Query<DATA> query)
     {
-        List<DATA> list = getAll();
-        for(int i=0; i<list.size(); i++)
+        boolean remove = false;
+        for(int i=0; i<allData.size(); i++)
         {
-            if(query.query(list.get(i)))
+            if(query.query(allData.get(i)))
             {
-                list.remove(i);
+                allData.remove(i);
+                remove = true;
                 break;
             }
         }
-        save(list);
+        if(remove)
+        {
+            addWork(saveWork);
+        }
     }
     public void removeAll(Query<DATA> query)
     {
-        List<DATA> list = getAll();
+        boolean remove = false;
         int i=0;
-        while(i<list.size())
+        while(i<allData.size())
         {
-            if(query.query(list.get(i)))
+            if(query.query(allData.get(i)))
             {
-                list.remove(i);
+                allData.remove(i);
+                remove = true;
             }
             else
             {
                 i++;
             }
         }
-        save(list);
+        if(remove)
+        {
+            addWork(saveWork);
+        }
     }
     public void clear()
     {
-        Map map = new HashMap();
-        map.put("list", new Object[]{});
-        map.put("date", System.currentTimeMillis());
-        try
+        synchronized(allData)
         {
-            write(fullPath, JSONWriter.write(map));
+            allData.clear();
         }
-        catch(IOException ex)
-        {
-        }
+        addWork(saveWork);
     }
-    private void save(List<DATA> list)
+    private void save()
     {
-        List convert = new ArrayList(list.size());
-        for(int i=0; i<list.size(); i++)
+        List convert = new ArrayList(allData.size());
+        synchronized(allData)
         {
-            convert.add(orm.write(list.get(i)));
+            for(int i=0; i<allData.size(); i++)
+            {
+                convert.add(orm.write(allData.get(i)));
+            }
         }
         Map map = new HashMap();
         map.put("list", convert);
@@ -260,5 +273,43 @@ public class Box<DATA>
                 fr.close();
             }
         }
+    }
+
+    private void addWork(Runnable runnable)
+    {
+        if(runnableQueue.isEmpty())
+        {
+            runnableQueue.offer(runnable);
+            try
+            {
+                make(runnableQueue.remove());
+            }
+            catch(NoSuchElementException e)
+            {
+
+            }
+        }
+        else
+        {
+            runnableQueue.offer(runnable);
+        }
+    }
+    private void make(Runnable runnable)
+    {
+        new Thread(runnable)
+        {
+            public void run()
+            {
+                super.run();
+                try
+                {
+                    make(runnableQueue.remove());
+                }
+                catch(NoSuchElementException e)
+                {
+
+                }
+            }
+        }.start();
     }
 }

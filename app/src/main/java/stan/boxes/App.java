@@ -8,16 +8,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import stan.boxes.reactive.ListModel;
+import stan.boxes.reactive.ReactiveBox;
+
 public class App
 {
     static private Box<Transaction> transactionsBox;
+    static private ReactiveBox<Transaction> transactionsReactiveBox;
     static private Case<Settings> settingsCase;
     static public void main(String[] args)
     {
         log("\n\tbegin");
     	String path = System.getProperty("user.home")+"/stan/boxes";
     	new File(path).mkdirs();
-    	/*
         transactionsBox = new Box<Transaction>(new ORM<Transaction>()
 			{
 				public Map write(Transaction data)
@@ -37,6 +40,7 @@ public class App
 				}
 			}, path+"/transactionsbox");
         log("size: " + transactionsBox.getAll().size());
+        /*
         List<Transaction> transactions = transactionsBox.getAll();
         for(int i=0; i<transactions.size(); i++)
         {
@@ -47,6 +51,7 @@ public class App
         		);
         }
         */
+        /*
         settingsCase = new Case<Settings>(new Settings(0, null, 0), new ORM<Settings>()
 			{
 				public Map write(Settings data)
@@ -70,8 +75,43 @@ public class App
         		+"\n\t\tname " + settings.getName()
         		+"\n\t\tcolor " + settings.getColor()
         		);
-        clearSettings();
+        */
+        transactionsReactiveBox = new ReactiveBox<Transaction>(new ORM<Transaction>()
+            {
+                public Map write(Transaction data)
+                {
+                    Map map = new HashMap();
+                    map.put("id", data.getId());
+                    map.put("count", data.getCount());
+                    map.put("date", data.getDate());
+                    return map;
+                }
+                public Transaction read(Map map)
+                {
+                    return new Transaction(
+                            Long.valueOf((Long)map.get("id")).intValue()
+                            ,Long.valueOf((Long)map.get("count")).intValue()
+                            ,(Long)map.get("date"));
+                }
+            }, path+"/transactionsreactivebox");
+        /*
+        log("size: " + transactionsReactiveBox.getAll().size());
+        ListModel<Transaction> transactions = transactionsReactiveBox.getAll();
+        for(int i=0; i<transactions.size(); i++)
+        {
+            log("\ttransaction:"
+                +"\n\t\tid " + transactions.get(i).getId()
+                +"\n\t\tcount " + transactions.get(i).getCount()
+                +"\n\t\tdate " + transactions.get(i).getDate()
+                );
+        }
+        */
+        //clearSettings();
         //save();
+        //
+        stressTestBox();
+        stressTestReactiveBox();
+        //
         //clearBox();
         //add();
         //query();
@@ -82,6 +122,40 @@ public class App
         //removeFirst();
         //removeAll();
         log("\n\tend");
+    }
+    static private void stressTestReactiveBox()
+    {
+        long t = System.currentTimeMillis();
+        stressTestReactive();
+        clearReactiveBox();
+        stressTestReactive();
+        clearReactiveBox();
+        stressTestReactive();
+        clearReactiveBox();
+        stressTestReactive();
+        stressTestReactive();
+        clearReactiveBox();
+        stressTestReactive();
+        clearReactiveBox();
+        stressTestReactive();
+        log("\ntime reactive " + (System.currentTimeMillis()-t));
+    }
+    static private void stressTestBox()
+    {
+        long t = System.currentTimeMillis();
+        stressTest();
+        clearBox();
+        stressTest();
+        clearBox();
+        stressTest();
+        clearBox();
+        stressTest();
+        stressTest();
+        clearBox();
+        stressTest();
+        clearBox();
+        stressTest();
+        log("\ntime " + (System.currentTimeMillis()-t));
     }
     static private void save()
     {
@@ -102,6 +176,45 @@ public class App
         		+"\n\t\tname " + settings.getName()
         		+"\n\t\tcolor " + settings.getColor()
         		);
+    }
+    //
+    static private void stressTestReactive()
+    {
+        int count = nextInt(500) + 1500;
+        log("count "+count);
+        for(int i=0; i<count; i++)
+        {
+            transactionsReactiveBox.add(new Transaction(nextInt(), nextInt(), System.currentTimeMillis()));
+        }
+        log("size reactive after add: " + transactionsReactiveBox.getAll().size());
+    }
+    static private void addReactive()
+    {
+        transactionsReactiveBox.add(
+            new Transaction(nextInt(),nextInt(100),System.currentTimeMillis())
+            ,new Transaction(nextInt(),nextInt(100),System.currentTimeMillis())
+            ,new Transaction(nextInt(),nextInt(100),System.currentTimeMillis())
+            ,new Transaction(nextInt(),nextInt(100),System.currentTimeMillis())
+            ,new Transaction(nextInt(),nextInt(100),System.currentTimeMillis())
+            ,new Transaction(nextInt(),nextInt(100),System.currentTimeMillis())
+            );
+        log("size reactive after add: " + transactionsReactiveBox.getAll().size());
+    }
+    static private void clearReactiveBox()
+    {
+        transactionsReactiveBox.clear();
+        log("size reactive after clear: " + transactionsReactiveBox.getAll().size());
+    }
+    //
+    static private void stressTest()
+    {
+        int count = nextInt(500) + 1500;
+        log("count "+count);
+        for(int i=0; i<count; i++)
+        {
+            transactionsBox.add(new Transaction(nextInt(), nextInt(), System.currentTimeMillis()));
+        }
+        log("size after add: " + transactionsBox.getAll().size());
     }
     static private void add()
     {

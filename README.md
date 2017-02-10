@@ -3,7 +3,7 @@ Object-Relational Mapping experiment
 
 <img src="media/icon.png" width="128" height="128" />
 
-# Box
+# Box (or experimental ReactiveBox)
 
 ##### Example 1.1. Create *Box*
 
