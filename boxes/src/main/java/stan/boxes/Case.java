@@ -18,7 +18,6 @@ public class Case<DATA>
     private final DATA def;
     private final ORM<DATA> orm;
     private final String fullPath;
-    private final JSONParser parser = new JSONParser();
 
     public Case(DATA d, ORM<DATA> o, String fp)
     {
@@ -49,7 +48,7 @@ public class Case<DATA>
         try
         {
             String json = read(fullPath);
-            Map map = (Map)parser.parse(json);
+            Map map = (Map)JSONParser.read(json);
             Map convert = (Map)map.get("data");
             data = orm.read(convert);
         }

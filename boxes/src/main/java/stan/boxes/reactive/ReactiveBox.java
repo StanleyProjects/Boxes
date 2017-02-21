@@ -6,14 +6,15 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.NoSuchElementException;
 
 import stan.boxes.ORM;
 import stan.boxes.Query;
@@ -27,7 +28,6 @@ public class ReactiveBox<DATA>
     private final List<DATA> allData;
     private final ORM<DATA> orm;
     private final String fullPath;
-    private final JSONParser parser = new JSONParser();
     private final Queue<Runnable> runnableQueue = new PriorityQueue<Runnable>();
     private final Runnable saveWork = new Runnable()
     {
@@ -67,9 +67,9 @@ public class ReactiveBox<DATA>
         try
         {
             String data = read(fullPath);
-            Map map = (Map)parser.parse(data);
+            Map map = (Map)JSONParser.read(data);
             List convert = (List)map.get("list");
-            List<DATA> list = new ArrayList<DATA>(convert.size());
+            List<DATA> list = Collections.synchronizedList(new ArrayList<DATA>(convert.size()));
             for(int i=0; i<convert.size(); i++)
             {
                 list.add(orm.read((Map)convert.get(i)));
@@ -100,6 +100,12 @@ public class ReactiveBox<DATA>
         return new ArrayListModel<DATA>(allData);
     }
 
+    public List<DATA> get(Comparator<DATA> comparator)
+    {
+        List<DATA> list = new ArrayList<DATA>(allData);
+        Collections.sort(list, comparator);
+        return list;
+    }
     public ListModel<DATA> get(Query<DATA> query)
     {
         return new ArrayListModel<DATA>(query(query));
@@ -142,10 +148,19 @@ public class ReactiveBox<DATA>
         }
         synchronized(allData)
         {
-            for(DATA d : datas)
-            {
-                allData.add(d);
-            }
+            Collections.addAll(allData, datas);
+        }
+        addWork(saveWork);
+    }
+    public void add(Collection<DATA> datas)
+    {
+        if(datas == null || datas.size() == 0)
+        {
+            return;
+        }
+        synchronized(allData)
+        {
+            allData.addAll(datas);
         }
         addWork(saveWork);
     }

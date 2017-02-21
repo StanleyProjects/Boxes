@@ -11,6 +11,18 @@ import java.util.Map;
 
 public class JSONParser
 {
+    static public Object read(String json)
+    {
+        try
+        {
+            return new JSONParser().parse(json);
+        }
+        catch(IOException e)
+        {
+            throw new ParseException(-1, -1, json);
+        }
+    }
+
     public static final int S_INIT = 0;
     public static final int S_IN_FINISHED_VALUE = 1;
     public static final int S_IN_OBJECT = 2;
@@ -25,6 +37,10 @@ public class JSONParser
     private Yytoken token = null;
     private int status = S_INIT;
 
+    private JSONParser()
+    {
+    }
+    
     private int peekStatus(LinkedList statusStack)
     {
         if(statusStack.size() == 0)

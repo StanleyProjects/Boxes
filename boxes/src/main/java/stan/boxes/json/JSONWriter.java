@@ -12,18 +12,30 @@ import java.util.Map;
 public class JSONWriter
 {
 	static public String write(Map map)
-		throws IOException
 	{
 		StringWriter writer = new StringWriter();
-		mapToJSONString(map, writer);
-		return writer.toString();
+		try
+		{
+			mapToJSONString(map, writer);
+			return writer.toString();
+		}
+		catch(IOException e)
+		{
+			throw new ParseException(-1, -1, map);
+		}
 	}
 	static public String write(Collection collection)
-		throws IOException
 	{
 		StringWriter writer = new StringWriter();
-		arrayToJSONString(collection, writer);
-		return writer.toString();
+		try
+		{
+			arrayToJSONString(collection, writer);
+			return writer.toString();
+		}
+		catch(IOException e)
+		{
+			throw new ParseException(-1, -1, collection);
+		}
 	}
 	
 	static private void mapToJSONString(Map map, Writer out)

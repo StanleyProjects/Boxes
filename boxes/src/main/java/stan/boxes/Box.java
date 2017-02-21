@@ -6,12 +6,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import stan.boxes.json.JSONParser;
 import stan.boxes.json.JSONWriter;
@@ -21,7 +21,6 @@ public class Box<DATA>
 {
     private final ORM<DATA> orm;
     private final String fullPath;
-    private final JSONParser parser = new JSONParser();
 
     public Box(ORM<DATA> o, String fp)
     {
@@ -53,7 +52,7 @@ public class Box<DATA>
         try
         {
             String data = read(fullPath);
-            Map map = (Map)parser.parse(data);
+            Map map = (Map)JSONParser.read(data);
             List convert = (List)map.get("list");
             List<DATA> list = new ArrayList<DATA>(convert.size());
             for(int i=0; i<convert.size(); i++)
@@ -75,7 +74,7 @@ public class Box<DATA>
             {
             }
         }
-        catch(IOException e)
+        catch(Exception e)
         {
         }
         return new ArrayList<DATA>();
@@ -86,7 +85,7 @@ public class Box<DATA>
         try
         {
             String data = read(fullPath);
-            Map map = (Map)parser.parse(data);
+            Map map = (Map)JSONParser.read(data);
             List convert = (List)map.get("list");
             List<DATA> list = new ArrayList<DATA>(convert.size());
             for(int i=0; i<convert.size(); i++)
@@ -112,10 +111,16 @@ public class Box<DATA>
             {
             }
         }
-        catch(IOException e)
+        catch(Exception e)
         {
         }
         return new ArrayList<DATA>();
+    }
+    public List<DATA> get(Comparator<DATA> comparator)
+    {
+        List<DATA> list = getAll();
+        Collections.sort(list, comparator);
+        return list;
     }
     public List<DATA> get(Query<DATA> query, Comparator<DATA> comparator)
     {
@@ -140,10 +145,17 @@ public class Box<DATA>
             return;
         }
         List<DATA> list = getAll();
-        for(DATA d : datas)
+        Collections.addAll(list, datas);
+        save(list);
+    }
+    public void add(Collection<DATA> datas)
+    {
+        if(datas == null || datas.size() == 0)
         {
-            list.add(d);
+            return;
         }
+        List<DATA> list = getAll();
+        list.addAll(datas);
         save(list);
     }
     public void replace(Query<DATA> query, DATA data)

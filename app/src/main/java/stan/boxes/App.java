@@ -2,6 +2,7 @@ package stan.boxes;
 
 import java.io.File;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -89,13 +90,13 @@ public class App
                 public Transaction read(Map map)
                 {
                     return new Transaction(
-                            Long.valueOf((Long)map.get("id")).intValue()
-                            ,Long.valueOf((Long)map.get("count")).intValue()
+                            ((Long)map.get("id")).intValue()
+                            ,((Long)map.get("count")).intValue()
                             ,(Long)map.get("date"));
                 }
             }, path+"/transactionsreactivebox");
+        log("size reactive: " + transactionsReactiveBox.getAll().size());
         /*
-        log("size: " + transactionsReactiveBox.getAll().size());
         ListModel<Transaction> transactions = transactionsReactiveBox.getAll();
         for(int i=0; i<transactions.size(); i++)
         {
@@ -109,10 +110,14 @@ public class App
         //clearSettings();
         //save();
         //
-        stressTestBox();
+        clearBox();
+        clearReactiveBox();
+        addList();
+        addReactiveList();
+        //
+        //stressTestBox();
         stressTestReactiveBox();
         //
-        //clearBox();
         //add();
         //query();
         //queryOrder();
@@ -122,6 +127,30 @@ public class App
         //removeFirst();
         //removeAll();
         log("\n\tend");
+    }
+    static private void addReactiveList()
+    {
+        int count = nextInt(500) + 1500;
+        log("count "+count);
+        List<Transaction> transactionsList = new ArrayList<Transaction>();
+        for(int i=0; i<count; i++)
+        {
+            transactionsList.add(new Transaction(nextInt(), nextInt(), System.currentTimeMillis()));
+        }
+        transactionsReactiveBox.add(transactionsList);
+        log("size reactive after add: " + transactionsReactiveBox.getAll().size());
+    }
+    static private void addList()
+    {
+        int count = nextInt(500) + 1500;
+        log("count "+count);
+        List<Transaction> transactionsList = new ArrayList<Transaction>();
+        for(int i=0; i<count; i++)
+        {
+            transactionsList.add(new Transaction(nextInt(), nextInt(), System.currentTimeMillis()));
+        }
+        transactionsBox.add(transactionsList);
+        log("size after add: " + transactionsBox.getAll().size());
     }
     static private void stressTestReactiveBox()
     {

@@ -20,8 +20,8 @@ Box<Transaction> transactionsBox = new Box<Transaction>(new ORM<Transaction>()
 	}
 	public Transaction read(Map map)
 	{
-		return new Transaction(Long.valueOf((Long)map.get("id")).intValue()
-				,Long.valueOf((Long)map.get("count")).intValue()
+		return new Transaction(((Long)map.get("id")).intValue()
+				,((Long)map.get("count")).intValue()
 				,(Long)map.get("date"));
 	}
 }, "/home/user/stan/boxes/transactionsbox");

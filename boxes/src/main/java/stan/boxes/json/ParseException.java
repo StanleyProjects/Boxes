@@ -1,7 +1,7 @@
 package stan.boxes.json;
 
 public class ParseException
-	extends Exception
+	extends RuntimeException
 {
     public static final int ERROR_UNEXPECTED_CHAR = 0;
     public static final int ERROR_UNEXPECTED_TOKEN = 1;
