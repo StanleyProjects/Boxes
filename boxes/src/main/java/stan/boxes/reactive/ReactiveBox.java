@@ -92,7 +92,7 @@ public class ReactiveBox<DATA>
         catch(IOException e)
         {
         }
-        return new ArrayList<DATA>();
+        return Collections.synchronizedList(new ArrayList<DATA>());
     }
 
     public ListModel<DATA> getAll()
