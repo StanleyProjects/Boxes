@@ -6,6 +6,7 @@ import org.junit.Test;
 import stan.boxes.utils.MainTest;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +17,14 @@ import static org.junit.Assert.*;
 public class BoxTest
     extends MainTest
 {
+    static private final Comparator<TestData> testDataNumberComparator = new Comparator<TestData>()
+    {
+        public int compare(TestData o1, TestData o2)
+        {
+            return o1.number < o2.number ? -1 : o1.number == o2.number ? 0 : 1;
+        }
+    };
+
     private Box<TestData> box;
 
     @Before
@@ -107,11 +116,11 @@ public class BoxTest
             list.add(fakeTestData());
         }
         int specialCount = nextInt(10) + 10;
-        final int specialNumber = nextInt();
+        final String specialString = nextString();
         List<TestData> specialList = new ArrayList<TestData>(specialCount);
         for(int i=0; i<specialCount; i++)
         {
-            specialList.add(new TestData(specialNumber, nextString(), nextBoolean(), nextLong(), nextDouble()));
+            specialList.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
         }
         list.addAll(specialList);
         box.addAll(list);
@@ -119,10 +128,10 @@ public class BoxTest
         {
             public boolean query(TestData item)
             {
-                return item.number == specialNumber;
+                return item.string.equals(specialString);
             }
         });
-        assertEquals("Size of list of test datas with special number "+specialNumber+" must be equals " + specialCount + "!", specialCount, result.size());
+        assertEquals("Size of list of test datas with special string "+specialString+" must be equals " + specialCount + "!", specialCount, result.size());
         for(TestData item: specialList)
         {
             assertTrue("Result list must contains item " + item, result.contains(item));
@@ -139,19 +148,184 @@ public class BoxTest
             list.add(fakeTestData());
         }
         box.addAll(list);
-        List<TestData> result = box.get(new Comparator<TestData>()
-        {
-            public int compare(TestData o1, TestData o2)
-            {
-                return o1.number < o2.number ? -1 : o1.number == o2.number ? 0 : 1;
-            }
-        });
+        List<TestData> result = box.get(testDataNumberComparator);
         assertEquals("Size of list of test datas must be equals " + count + "!", count, result.size());
         TestData previousItem = result.get(0);
         for(TestData item: result)
         {
             assertTrue("Item with number " + item.number + " must stand after item with number " + previousItem.number, previousItem.number <= item.number);
             previousItem = item;
+        }
+    }
+    @Test
+    public void getRangeTest()
+    {
+        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        int count = nextInt(100) + 100;
+        List<TestData> list = new ArrayList<TestData>(count);
+        for(int i=0; i<count; i++)
+        {
+            list.add(fakeTestData());
+        }
+        box.addAll(list);
+        int rangeStart = nextInt(25) + 25;
+        int rangeCount = nextInt(25) + 25;
+        List<TestData> result = box.get(new Range(rangeStart, rangeCount));
+        List<TestData> subList = list.subList(rangeStart, rangeStart + rangeCount);
+        assertEquals("Size of list of test datas must be equals " + subList.size() + "!", subList.size(), result.size());
+        for(TestData item: result)
+        {
+            assertTrue("Result list must contains item " + item, subList.contains(item));
+        }
+    }
+    @Test
+    public void getQueryComparatorTest()
+    {
+        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        int count = nextInt(50) + 50;
+        List<TestData> list = new ArrayList<TestData>();
+        for(int i=0; i<count; i++)
+        {
+            list.add(fakeTestData());
+        }
+        int specialCount = nextInt(10) + 10;
+        final String specialString = nextString();
+        List<TestData> specialList = new ArrayList<TestData>(specialCount);
+        for(int i=0; i<specialCount; i++)
+        {
+            specialList.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
+        }
+        list.addAll(specialList);
+        box.addAll(list);
+        List<TestData> result = box.get(new Query<TestData>()
+        {
+            public boolean query(TestData item)
+            {
+                return item.string.equals(specialString);
+            }
+        }, new Comparator<TestData>()
+        {
+            public int compare(TestData o1, TestData o2)
+            {
+                return o1.number < o2.number ? -1 : o1.number == o2.number ? 0 : 1;
+            }
+        });
+        assertEquals("Size of list of test datas with special string "+specialString+" must be equals " + specialCount + "!", specialCount, result.size());
+        TestData previousItem = result.get(0);
+        for(TestData item: result)
+        {
+            assertTrue("Item with number " + item.number + " must stand after item with number " + previousItem.number, previousItem.number <= item.number);
+            previousItem = item;
+            assertTrue("Result list must contains item " + item, specialList.contains(item));
+        }
+    }
+    @Test
+    public void getQueryRangeTest()
+    {
+        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        int count = nextInt(200) + 300;
+        List<TestData> list = new ArrayList<TestData>();
+        for(int i=0; i<count; i++)
+        {
+            list.add(fakeTestData());
+        }
+        int specialCount = nextInt(100) + 100;
+        final String specialString = nextString();
+        List<TestData> specialList = new ArrayList<TestData>(specialCount);
+        for(int i=0; i<specialCount; i++)
+        {
+            specialList.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
+        }
+        list.addAll(specialList);
+        box.addAll(list);
+        int rangeStart = nextInt(25) + 25;
+        int rangeCount = nextInt(25) + 25;
+        List<TestData> result = box.get(new Query<TestData>()
+        {
+            public boolean query(TestData item)
+            {
+                return item.string.equals(specialString);
+            }
+        }, new Range(rangeStart, rangeCount));
+        List<TestData> subList = specialList.subList(rangeStart, rangeStart + rangeCount);
+        assertEquals("Size of list of test datas with special string "+specialString+" must be equals " + subList.size() + "!", subList.size(), result.size());
+        for(TestData item: result)
+        {
+            assertTrue("Result list must contains item " + item, subList.contains(item));
+        }
+    }
+    @Test
+    public void getComparatorRangeTest()
+    {
+        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        int count = nextInt(200) + 300;
+        List<TestData> list = new ArrayList<TestData>(count);
+        for(int i=0; i<count; i++)
+        {
+            list.add(fakeTestData());
+        }
+        Collections.shuffle(list);
+        box.addAll(list);
+        int rangeStart = nextInt(25) + 25;
+        int rangeCount = nextInt(25) + 25;
+        List<TestData> result = box.get(testDataNumberComparator, new Range(rangeStart, rangeCount));
+        Collections.sort(list, testDataNumberComparator);
+        List<TestData> subList = list.subList(rangeStart, rangeStart + rangeCount);
+        assertEquals("Size of list of test datas must be equals " + subList.size() + "!", subList.size(), result.size());
+        TestData previousItem = result.get(0);
+        for(int i=0; i<subList.size(); i++)
+        {
+            assertEquals("Result item " + result.get(i)
+                    + "must be equals item " + subList.get(i),
+                subList.get(i), result.get(i));
+            assertTrue("Item with number " + result.get(i).number
+                    + " must stand after item with number " + result.get(i).number,
+                previousItem.number <= result.get(i).number);
+            previousItem = result.get(i);
+        }
+    }
+    @Test
+    public void getQueryComparatorRangeTest()
+    {
+        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        int count = nextInt(200) + 300;
+        List<TestData> list = new ArrayList<TestData>(count);
+        for(int i=0; i<count; i++)
+        {
+            list.add(fakeTestData());
+        }
+        int specialCount = nextInt(100) + 100;
+        final String specialString = nextString();
+        List<TestData> specialList = new ArrayList<TestData>(specialCount);
+        for(int i=0; i<specialCount; i++)
+        {
+            specialList.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
+        }
+        list.addAll(specialList);
+        Collections.shuffle(list);
+        box.addAll(list);
+        int rangeStart = nextInt(25) + 25;
+        int rangeCount = nextInt(25) + 25;
+        List<TestData> result = box.get(new Query<TestData>()
+        {
+            public boolean query(TestData item)
+            {
+                return item.string.equals(specialString);
+            }
+        }, testDataNumberComparator, new Range(rangeStart, rangeCount));
+        Collections.sort(specialList, testDataNumberComparator);
+        List<TestData> subList = specialList.subList(rangeStart, rangeStart + rangeCount);
+        assertEquals("Size of list of test datas with special string "+specialString+" must be equals " + subList.size() + "!", subList.size(), result.size());
+        TestData previousItem = result.get(0);
+        for(int i=0; i<subList.size(); i++)
+        {
+            assertEquals("Result item " + result.get(i)
+                    + "must be equals item " + subList.get(i),
+                subList.get(i), result.get(i));
+            assertTrue("Item with number " + result.get(i).number
+                    + " must stand after item with number " + result.get(i).number,
+                previousItem.number <= result.get(i).number);
+            previousItem = result.get(i);
         }
     }
     @Test

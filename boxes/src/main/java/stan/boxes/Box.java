@@ -28,40 +28,26 @@ public class Box<T>
         fullPath = fp;
         createNewFile();
     }
-    private void createNewFile()
-    {
-        File boxFile = new File(fullPath);
-        if(!boxFile.exists())
-        {
-            try
-            {
-                boxFile.createNewFile();
-            }
-            catch(IOException e)
-            {
-                throw new BoxException(e);
-            }
-            writeEmpty();
-        } 
-    }
 
-    public List getRaw()
+    public void add(T data, T... datas)
     {
-        List convert;
-        try
+        List<T> list = getAll();
+        list.add(data);
+        if(datas != null && datas.length > 0)
         {
-            convert = (List)((Map)JSONParser.read(read(fullPath))).get("list");
+            Collections.addAll(list, datas);
         }
-        catch(IOException e)
+        save(list);
+    }
+    public void addAll(Collection<T> datas)
+    {
+        if(datas == null || datas.isEmpty())
         {
-            throw new BoxException(e);
+            return;
         }
-        catch(ParseException e)
-        {
-            writeEmpty();
-            return Collections.emptyList();
-        }
-        return convert;
+        List<T> list = getAll();
+        list.addAll(datas);
+        save(list);
     }
     public List<T> getAll()
     {
@@ -98,44 +84,56 @@ public class Box<T>
     public List<T> get(Comparator<T> comparator)
     {
         List<T> list = getAll();
-        Collections.sort(list, comparator);
+        if(list.size() > 1)
+        {
+            Collections.sort(list, comparator);
+        }
         return list;
+    }
+    public List<T> get(Range range)
+    {
+        List<T> list = getAll();
+        if(list.isEmpty())
+        {
+            return Collections.emptyList();
+        }
+        return list.subList(range.start, range.start + range.count);
     }
     public List<T> get(Query<T> query, Comparator<T> comparator)
     {
         List<T> list = get(query);
-        Collections.sort(list, comparator);
+        if(list.size() > 1)
+        {
+            Collections.sort(list, comparator);
+        }
         return list;
     }
     public List<T> get(Query<T> query, Range range)
     {
         List<T> list = get(query);
+        if(list.isEmpty())
+        {
+            return Collections.emptyList();
+        }
+        return list.subList(range.start, range.start + range.count);
+    }
+    public List<T> get(Comparator<T> comparator, Range range)
+    {
+        List<T> list = get(comparator);
+        if(list.isEmpty())
+        {
+            return Collections.emptyList();
+        }
         return list.subList(range.start, range.start + range.count);
     }
     public List<T> get(Query<T> query, Comparator<T> comparator, Range range)
     {
         List<T> list = get(query, comparator);
+        if(list.isEmpty())
+        {
+            return Collections.emptyList();
+        }
         return list.subList(range.start, range.start + range.count);
-    }
-    public void add(T data, T... datas)
-    {
-        List<T> list = getAll();
-        list.add(data);
-        if(datas != null && datas.length > 0)
-        {
-            Collections.addAll(list, datas);
-        }
-        save(list);
-    }
-    public void addAll(Collection<T> datas)
-    {
-        if(datas == null || datas.isEmpty())
-        {
-            return;
-        }
-        List<T> list = getAll();
-        list.addAll(datas);
-        save(list);
     }
     public void update(Query<T> query, T data)
     {
@@ -195,6 +193,41 @@ public class Box<T>
     public void clear()
     {
         writeEmpty();
+    }
+
+    private void createNewFile()
+    {
+        File boxFile = new File(fullPath);
+        if(!boxFile.exists())
+        {
+            try
+            {
+                boxFile.createNewFile();
+            }
+            catch(IOException e)
+            {
+                throw new BoxException(e);
+            }
+            writeEmpty();
+        }
+    }
+    private List getRaw()
+    {
+        List convert;
+        try
+        {
+            convert = (List)((Map)JSONParser.read(read(fullPath))).get("list");
+        }
+        catch(IOException e)
+        {
+            throw new BoxException(e);
+        }
+        catch(ParseException e)
+        {
+            writeEmpty();
+            return Collections.emptyList();
+        }
+        return convert;
     }
     private void writeData(Object object)
     {
