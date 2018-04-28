@@ -3,11 +3,7 @@ package stan.boxes.json;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class JSONWriter
 {
@@ -22,19 +18,6 @@ public class JSONWriter
 		catch(IOException e)
 		{
 			throw new ParseException(-1, -1, map);
-		}
-	}
-	static public String write(Collection collection)
-	{
-		StringWriter writer = new StringWriter();
-		try
-		{
-			arrayToJSONString(collection, writer);
-			return writer.toString();
-		}
-		catch(IOException e)
-		{
-			throw new ParseException(-1, -1, collection);
 		}
 	}
 	
@@ -64,7 +47,6 @@ public class JSONWriter
 		}
 		out.write('}');
 	}
-	
 	static private void objectToJSONString(Object value, Writer out)
 		throws IOException
 	{
@@ -173,10 +155,7 @@ public class JSONWriter
 		}
 		if(value instanceof Object[]){
 			List<Object> list = new ArrayList<Object>();
-			for (Object val : (Object[]) value)
-			{
-				list.add(val);
-			}
+			Collections.addAll(list, (Object[]) value);
 			arrayToJSONString(list, out);
 			return;
 		}
@@ -191,8 +170,7 @@ public class JSONWriter
 		}
 		objectToJSONString(value.toString(), out);
 	}
-	
-	static public void arrayToJSONString(Collection collection, Writer out)
+	static private void arrayToJSONString(Collection collection, Writer out)
 		throws IOException
 	{
 		if(collection == null)
@@ -219,7 +197,6 @@ public class JSONWriter
 		}
 		out.write(']');
 	}
-	
     static private String escape(String s)
 	{
         StringBuffer sb = new StringBuffer();

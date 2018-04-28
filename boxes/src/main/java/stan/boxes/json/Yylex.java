@@ -2,10 +2,10 @@ package stan.boxes.json;
 
 class Yylex
 {
-    public static final int YYEOF = -1;
+    private static final int YYEOF = -1;
     private static final int ZZ_BUFFERSIZE = 16384;
-    public static final int YYINITIAL = 0;
-    public static final int STRING_BEGIN = 2;
+    private static final int YYINITIAL = 0;
+    private static final int STRING_BEGIN = 2;
     private static final int ZZ_LEXSTATE[] =
     {
         0,  0,  1, 1
@@ -164,14 +164,13 @@ class Yylex
     private static int [] zzUnpackAttribute()
     {
         int [] result = new int[45];
-        int offset = 0;
-        offset = zzUnpackAttribute(ZZ_ATTRIBUTE_PACKED_0, offset, result);
+        zzUnpackAttribute(ZZ_ATTRIBUTE_PACKED_0, result);
         return result;
     }
-    private static int zzUnpackAttribute(String packed, int offset, int [] result)
+    private static int zzUnpackAttribute(String packed, int[] result)
     {
         int i = 0;       /* index in packed string  */
-        int j = offset;  /* index in unpacked array */
+        int j = 0;  /* index in unpacked array */
         int l = packed.length();
         while(i < l)
         {
@@ -250,17 +249,6 @@ class Yylex
     }
 
     /**
-     * Creates a new scanner.
-     * There is also java.io.Reader version of this constructor.
-     *
-     * @param   in  the java.io.Inputstream to read input from.
-     */
-    Yylex(java.io.InputStream in)
-    {
-        this(new java.io.InputStreamReader(in));
-    }
-
-    /**
      * Unpacks the compressed character translation table.
      *
      * @param packed   the packed character translation table
@@ -336,19 +324,6 @@ class Yylex
         return true;
     }
 
-
-    /**
-     * Closes the input stream.
-     */
-    public final void yyclose() throws java.io.IOException
-    {
-        zzAtEOF = true;            /* indicate end of file */
-        zzEndRead = zzStartRead;  /* invalidate buffer    */
-        if(zzReader != null)
-            zzReader.close();
-    }
-
-
     /**
      * Resets the scanner to read from a new input stream.
      * Does not close the old reader.
@@ -359,7 +334,7 @@ class Yylex
      *
      * @param reader   the new input stream
      */
-    public final void yyreset(java.io.Reader reader)
+    final void yyreset(java.io.Reader reader)
     {
         zzReader = reader;
         zzAtBOL  = true;
@@ -385,7 +360,7 @@ class Yylex
      *
      * @param newState the new lexical state
      */
-    public final void yybegin(int newState)
+    private void yybegin(int newState)
     {
         zzLexicalState = newState;
     }
@@ -394,7 +369,7 @@ class Yylex
     /**
      * Returns the text matched by the current regular expression.
      */
-    public final String yytext()
+    private String yytext()
     {
         return new String(zzBuffer, zzStartRead, zzMarkedPos - zzStartRead);
     }
@@ -411,7 +386,7 @@ class Yylex
      *
      * @return the character at position pos
      */
-    public final char yycharat(int pos)
+    private char yycharat(int pos)
     {
         return zzBuffer[zzStartRead + pos];
     }
@@ -420,7 +395,7 @@ class Yylex
     /**
      * Returns the length of the matched text region.
      */
-    public final int yylength()
+    private int yylength()
     {
         return zzMarkedPos - zzStartRead;
     }
@@ -478,7 +453,7 @@ class Yylex
      * @return      the next token
      * @exception   java.io.IOException  if any I/O-Error occurs
      */
-    public Yytoken yylex() throws java.io.IOException, ParseException
+    Yytoken yylex() throws java.io.IOException, ParseException
     {
         int zzInput;
         int zzAction;

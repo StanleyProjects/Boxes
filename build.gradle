@@ -1,8 +1,16 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
 
 allprojects {
-  ext {
-    applicationId = 'stan.boxes'
-    versionCode = 1702212126
-    versionName = "0.0.5"
-  }
+    repositories {
+        jcenter()
+    }
+    ext {
+        applicationId = 'stan.boxes'
+        versionCode = 1804271926
+        versionName = "0.0.6"
+    }
 }

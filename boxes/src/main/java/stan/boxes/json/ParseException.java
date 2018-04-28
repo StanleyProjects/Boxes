@@ -3,15 +3,15 @@ package stan.boxes.json;
 public class ParseException
 	extends RuntimeException
 {
-    public static final int ERROR_UNEXPECTED_CHAR = 0;
-    public static final int ERROR_UNEXPECTED_TOKEN = 1;
-    public static final int ERROR_UNEXPECTED_EXCEPTION = 2;
+    static final int ERROR_UNEXPECTED_CHAR = 0;
+    static final int ERROR_UNEXPECTED_TOKEN = 1;
+    static final int ERROR_UNEXPECTED_EXCEPTION = 2;
 
     private int errorType;
     private Object unexpectedObject;
     private int position;
 
-    public ParseException(int position, int errorType, Object unexpectedObject)
+    ParseException(int position, int errorType, Object unexpectedObject)
     {
         this.position = position;
         this.errorType = errorType;

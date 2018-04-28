@@ -119,13 +119,13 @@ public class ReactiveBox<DATA>
     public ListModel<DATA> get(Query<DATA> query, Range range)
     {
         List<DATA> list = query(query);
-        return new ArrayListModel<DATA>(list.subList(range.getStart(), range.getStart() + range.getCount()));
+        return new ArrayListModel<DATA>(list.subList(range.start, range.start + range.count));
     }
     public ListModel<DATA> get(Query<DATA> query, Comparator<DATA> comparator, Range range)
     {
         List<DATA> list = query(query);
         Collections.sort(list, comparator);
-        return new ArrayListModel<DATA>(list.subList(range.getStart(), range.getStart() + range.getCount()));
+        return new ArrayListModel<DATA>(list.subList(range.start, range.start + range.count));
     }
     private List<DATA> query(Query<DATA> query)
     {

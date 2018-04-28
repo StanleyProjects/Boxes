@@ -17,12 +17,12 @@ import stan.boxes.json.JSONParser;
 import stan.boxes.json.JSONWriter;
 import stan.boxes.json.ParseException;
 
-public class Box<DATA>
+public class Box<T>
 {
-    private final ORM<DATA> orm;
+    private final ORM<T> orm;
     private final String fullPath;
 
-    public Box(ORM<DATA> o, String fp)
+    public Box(ORM<T> o, String fp)
     {
         orm = o;
         fullPath = fp;
@@ -36,131 +36,110 @@ public class Box<DATA>
             try
             {
                 boxFile.createNewFile();
-                Map map = new HashMap();
-                map.put("list", new Object[]{});
-                map.put("date", System.currentTimeMillis());
-                write(fullPath, JSONWriter.write(map));
             }
             catch(IOException e)
             {
+                throw new BoxException(e);
             }
+            writeEmpty();
         } 
     }
 
-    public List<DATA> getAll()
+    public List getRaw()
     {
+        List convert;
         try
         {
-            String data = read(fullPath);
-            Map map = (Map)JSONParser.read(data);
-            List convert = (List)map.get("list");
-            List<DATA> list = new ArrayList<DATA>(convert.size());
-            for(int i=0; i<convert.size(); i++)
-            {
-                list.add(orm.read((Map)convert.get(i)));
-            }
-            return list;
+            convert = (List)((Map)JSONParser.read(read(fullPath))).get("list");
+        }
+        catch(IOException e)
+        {
+            throw new BoxException(e);
         }
         catch(ParseException e)
         {
-            try
-            {
-                Map map = new HashMap();
-                map.put("list", new Object[]{});
-                map.put("date", System.currentTimeMillis());
-                write(fullPath, JSONWriter.write(map));
-            }
-            catch(IOException ex)
-            {
-            }
+            writeEmpty();
+            return Collections.emptyList();
         }
-        catch(Exception e)
-        {
-        }
-        return new ArrayList<DATA>();
+        return convert;
     }
-
-    public List<DATA> get(Query<DATA> query)
+    public List<T> getAll()
     {
-        try
+        List convert = getRaw();
+        if(convert.isEmpty())
         {
-            String data = read(fullPath);
-            Map map = (Map)JSONParser.read(data);
-            List convert = (List)map.get("list");
-            List<DATA> list = new ArrayList<DATA>(convert.size());
-            for(int i=0; i<convert.size(); i++)
-            {
-                DATA tmp = orm.read((Map)convert.get(i));
-                if(query.query(tmp))
-                {
-                    list.add(tmp); 
-                }
-            }
-            return list;
+            return new ArrayList<T>();
         }
-        catch(ParseException e)
+        List<T> list = new ArrayList<T>(convert.size());
+        for(Object item: convert)
         {
-            try
-            {
-                Map map = new HashMap();
-                map.put("list", new Object[]{});
-                map.put("date", System.currentTimeMillis());
-                write(fullPath, JSONWriter.write(map));
-            }
-            catch(IOException ex)
-            {
-            }
+            list.add(orm.read((Map)item));
         }
-        catch(Exception e)
-        {
-        }
-        return new ArrayList<DATA>();
+        return list;
     }
-    public List<DATA> get(Comparator<DATA> comparator)
+    public List<T> get(Query<T> query)
     {
-        List<DATA> list = getAll();
+        List convert = getRaw();
+        if(convert.isEmpty())
+        {
+            return Collections.emptyList();
+        }
+        List<T> list = new ArrayList<T>(convert.size());
+        for(Object item: convert)
+        {
+            T tmp = orm.read((Map)item);
+            if(query.query(tmp))
+            {
+                list.add(tmp);
+            }
+        }
+        return list;
+    }
+    public List<T> get(Comparator<T> comparator)
+    {
+        List<T> list = getAll();
         Collections.sort(list, comparator);
         return list;
     }
-    public List<DATA> get(Query<DATA> query, Comparator<DATA> comparator)
+    public List<T> get(Query<T> query, Comparator<T> comparator)
     {
-        List<DATA> list = get(query);
+        List<T> list = get(query);
         Collections.sort(list, comparator);
         return list;
     }
-    public List<DATA> get(Query<DATA> query, Range range)
+    public List<T> get(Query<T> query, Range range)
     {
-        List<DATA> list = get(query);
-        return list.subList(range.getStart(), range.getStart() + range.getCount());
+        List<T> list = get(query);
+        return list.subList(range.start, range.start + range.count);
     }
-    public List<DATA> get(Query<DATA> query, Comparator<DATA> comparator, Range range)
+    public List<T> get(Query<T> query, Comparator<T> comparator, Range range)
     {
-        List<DATA> list = get(query, comparator);
-        return list.subList(range.getStart(), range.getStart() + range.getCount());
+        List<T> list = get(query, comparator);
+        return list.subList(range.start, range.start + range.count);
     }
-    public void add(DATA... datas)
+    public void add(T data, T... datas)
     {
-        if(datas == null || datas.length == 0)
+        List<T> list = getAll();
+        list.add(data);
+        if(datas != null && datas.length > 0)
         {
-            return;
+            Collections.addAll(list, datas);
         }
-        List<DATA> list = getAll();
-        Collections.addAll(list, datas);
         save(list);
     }
-    public void add(Collection<DATA> datas)
+    public void addAll(Collection<T> datas)
     {
-        if(datas == null || datas.size() == 0)
+        if(datas == null || datas.isEmpty())
         {
             return;
         }
-        List<DATA> list = getAll();
+        List<T> list = getAll();
         list.addAll(datas);
         save(list);
     }
-    public void replace(Query<DATA> query, DATA data)
+    public void update(Query<T> query, T data)
     {
-        List<DATA> list = getAll();
+        List<T> list = getAll();
         for(int i=0; i<list.size(); i++)
         {
             if(query.query(list.get(i)))
@@ -171,9 +150,21 @@ public class Box<DATA>
         }
         save(list);
     }
-    public void removeFirst(Query<DATA> query)
+    public void updateAll(Query<T> query, T data)
     {
-        List<DATA> list = getAll();
+        List<T> list = getAll();
+        for(int i=0; i<list.size(); i++)
+        {
+            if(query.query(list.get(i)))
+            {
+                list.set(i, data);
+            }
+        }
+        save(list);
+    }
+    public void removeFirst(Query<T> query)
+    {
+        List<T> list = getAll();
         for(int i=0; i<list.size(); i++)
         {
             if(query.query(list.get(i)))
@@ -184,9 +175,9 @@ public class Box<DATA>
         }
         save(list);
     }
-    public void removeAll(Query<DATA> query)
+    public void removeAll(Query<T> query)
     {
-        List<DATA> list = getAll();
+        List<T> list = getAll();
         int i=0;
         while(i<list.size())
         {
@@ -203,73 +194,74 @@ public class Box<DATA>
     }
     public void clear()
     {
+        writeEmpty();
+    }
+    private void writeData(Object object)
+    {
         Map map = new HashMap();
-        map.put("list", new Object[]{});
+        map.put("list", object);
         map.put("date", System.currentTimeMillis());
         try
         {
             write(fullPath, JSONWriter.write(map));
         }
-        catch(IOException ex)
+        catch(IOException e)
         {
+            throw new BoxException(e);
         }
     }
-    private void save(List<DATA> list)
+    private void writeEmpty()
+    {
+        writeData(new Object[]{});
+    }
+    private void save(List<T> list)
     {
         List convert = new ArrayList(list.size());
-        for(int i=0; i<list.size(); i++)
+        for(T item : list)
         {
-            convert.add(orm.write(list.get(i)));
+            convert.add(orm.write(item));
         }
-        Map map = new HashMap();
-        map.put("list", convert);
-        map.put("date", System.currentTimeMillis());
-        try
-        {
-            write(fullPath, JSONWriter.write(map));
-        }
-        catch(IOException ex)
-        {
-        }
+        writeData(convert);
     }
 
-    private void write(String fp, String data) throws IOException
+    synchronized private void write(String path, String data) throws IOException
     {
-        synchronized(this)
+        FileWriter fileWriter = null;
+        try
         {
-            FileWriter fw = null;
-            try
-            { 
-                fw = new FileWriter(fp);
-                fw.write(data);
-            }
-            finally
+            fileWriter = new FileWriter(path);
+            fileWriter.write(data);
+        }
+        finally
+        {
+            if(fileWriter != null)
             {
-                fw.close();
+                fileWriter.close();
             }
         }
     }
-    private String read(String fp) throws IOException
+    synchronized private String read(String path)
+        throws IOException
     {
-        synchronized(this)
+        FileReader fileReader = null;
+        try
         {
-            FileReader fr = null;
-            try
+            fileReader = new FileReader(path);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            StringBuilder stringBuilder = new StringBuilder();
+            String line = bufferedReader.readLine();
+            while(line != null)
             {
-                fr = new FileReader(fp);
-                BufferedReader br = new BufferedReader(fr);
-                StringBuilder sb = new StringBuilder();
-                String line = br.readLine();
-                while(line != null)
-                {
-                    sb.append(line);
-                    line = br.readLine();
-                }
-                return sb.toString();
+                stringBuilder.append(line);
+                line = bufferedReader.readLine();
             }
-            finally
+            return stringBuilder.toString();
+        }
+        finally
+        {
+            if(fileReader != null)
             {
-                fr.close();
+                fileReader.close();
             }
         }
     }

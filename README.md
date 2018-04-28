@@ -3,7 +3,7 @@ Object-Relational Mapping experiment
 
 <img src="media/icon.png" width="128" height="128" />
 
-# Box (or experimental ReactiveBox)
+# Box
 
 ##### Example 1.1. Create *Box*
 
@@ -20,9 +20,9 @@ Box<Transaction> transactionsBox = new Box<Transaction>(new ORM<Transaction>()
 	}
 	public Transaction read(Map map)
 	{
-		return new Transaction(((Long)map.get("id")).intValue()
-				,((Long)map.get("count")).intValue()
-				,(Long)map.get("date"));
+		return new Transaction(((Long)map.get("id")).intValue(),
+		    ((Long)map.get("count")).intValue(),
+		    (Long)map.get("date"));
 	}
 }, "/home/user/stan/boxes/transactionsbox");
 ```
@@ -30,11 +30,11 @@ Box<Transaction> transactionsBox = new Box<Transaction>(new ORM<Transaction>()
 ##### Example 1.2. Put objects to *Box*
 
 ```java
-transactionsBox.add(new Transaction(1, 100, System.currentTimeMillis())
-	,new Transaction(2, 58, System.currentTimeMillis())
-	,new Transaction(3, -45, System.currentTimeMillis())
-	,new Transaction(4, 23, System.currentTimeMillis())
-	,new Transaction(5, -78, System.currentTimeMillis()));
+transactionsBox.add(new Transaction(1, 100, System.currentTimeMillis()),
+    new Transaction(2, 58, System.currentTimeMillis()),
+	new Transaction(3, -45, System.currentTimeMillis()),
+	new Transaction(4, 23, System.currentTimeMillis()),
+	new Transaction(5, -78, System.currentTimeMillis()));
 ```
 
 ##### Example 1.3. Get list objects from *Box*
@@ -96,9 +96,9 @@ Case<Settings> settingsCase = new Case<Settings>(new Settings(0, null, 0), new O
 	}
 	public Settings read(Map map)
 	{
-		return new Settings((Long)map.get("time")
-			,(String)map.get("name")
-			,Long.valueOf((Long)map.get("color")).intValue());
+		return new Settings((Long)map.get("time"),
+		    (String)map.get("name"),
+		    Long.valueOf((Long)map.get("color")).intValue());
 	}
 }, "/home/user/stan/boxes/settingscase");
 ```
