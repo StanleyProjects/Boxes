@@ -22,10 +22,18 @@ public class Box<T>
     private final ORM<T> orm;
     private final String fullPath;
 
-    public Box(ORM<T> o, String fp)
+    public Box(ORM<T> o, String path)
     {
+        if(o == null)
+        {
+            throw new BoxException("Property \"orm\" must be exist!");
+        }
         orm = o;
-        fullPath = fp;
+        if(path == null)
+        {
+            throw new BoxException("Property \"path\" must be exist!");
+        }
+        fullPath = path;
         createNewFile();
     }
 
@@ -51,29 +59,29 @@ public class Box<T>
     }
     public List<T> getAll()
     {
-        List convert = getRaw();
+        List<Map<String, Object>> convert = getRaw();
         if(convert.isEmpty())
         {
             return new ArrayList<T>();
         }
         List<T> list = new ArrayList<T>(convert.size());
-        for(Object item: convert)
+        for(Map<String, Object> item: convert)
         {
-            list.add(orm.read((Map)item));
+            list.add(orm.read(item));
         }
         return list;
     }
     public List<T> get(Query<T> query)
     {
-        List convert = getRaw();
+        List<Map<String, Object>> convert = getRaw();
         if(convert.isEmpty())
         {
             return Collections.emptyList();
         }
         List<T> list = new ArrayList<T>(convert.size());
-        for(Object item: convert)
+        for(Map<String, Object> item: convert)
         {
-            T tmp = orm.read((Map)item);
+            T tmp = orm.read(item);
             if(query.query(tmp))
             {
                 list.add(tmp);
@@ -135,7 +143,24 @@ public class Box<T>
         }
         return list.subList(range.start, range.start + range.count);
     }
-    public void update(Query<T> query, T data)
+    public T getFirst(Query<T> query)
+    {
+        List<Map<String, Object>> convert = getRaw();
+        if(convert.isEmpty())
+        {
+            return null;
+        }
+        for(Map<String, Object> item: convert)
+        {
+            T tmp = orm.read(item);
+            if(query.query(tmp))
+            {
+                return tmp;
+            }
+        }
+        return null;
+    }
+    public void updateFirst(Query<T> query, T data)
     {
         List<T> list = getAll();
         for(int i=0; i<list.size(); i++)
@@ -211,12 +236,12 @@ public class Box<T>
             writeEmpty();
         }
     }
-    private List getRaw()
+    private List<Map<String, Object>> getRaw()
     {
-        List convert;
+        List<Map<String, Object>> convert;
         try
         {
-            convert = (List)((Map)JSONParser.read(read(fullPath))).get("list");
+            convert = (List<Map<String, Object>>)((Map<String, Object>)JSONParser.read(read(fullPath))).get("list");
         }
         catch(IOException e)
         {
@@ -231,7 +256,7 @@ public class Box<T>
     }
     private void writeData(Object object)
     {
-        Map map = new HashMap();
+        Map<String, Object> map = new HashMap<String, Object>();
         map.put("list", object);
         map.put("date", System.currentTimeMillis());
         try
@@ -249,7 +274,7 @@ public class Box<T>
     }
     private void save(List<T> list)
     {
-        List convert = new ArrayList(list.size());
+        List<Map<String, Object>> convert = new ArrayList<Map<String, Object>>(list.size());
         for(T item : list)
         {
             convert.add(orm.write(item));

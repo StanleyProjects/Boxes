@@ -7,4 +7,8 @@ public class BoxException
     {
         super(e);
     }
+    BoxException(String s)
+    {
+        super(s);
+    }
 }

@@ -110,7 +110,7 @@ public class App
         {
             transactionsList.add(new Transaction(nextInt(), nextInt(), System.currentTimeMillis()));
         }
-        transactionsBox.add(transactionsList);
+        transactionsBox.addAll(transactionsList);
         log("size after add: " + transactionsBox.getAll().size());
     }
     static private void stressTestBox()
@@ -302,7 +302,7 @@ public class App
         		+"\n\t\tdate " + transactions.get(i).getDate()
         		);
         }
-        transactionsBox.replace(new Query<Transaction>()
+        transactionsBox.update(new Query<Transaction>()
         	{
         		public boolean query(Transaction transaction)
         		{

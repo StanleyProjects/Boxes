@@ -2,8 +2,8 @@ package stan.boxes;
 
 import java.util.Map;
 
-public interface ORM<DATA>
+public interface ORM<T>
 {
-	Map write(DATA data);
-	DATA read(Map map);
+	Map<String, Object> write(T data);
+	T read(Map<String, Object> map);
 }

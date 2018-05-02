@@ -72,7 +72,7 @@ public class ReactiveBox<DATA>
             List<DATA> list = Collections.synchronizedList(new ArrayList<DATA>(convert.size()));
             for(int i=0; i<convert.size(); i++)
             {
-                list.add(orm.read((Map)convert.get(i)));
+                list.add(orm.read((Map<String, Object>)convert.get(i)));
             }
             return list;
         }

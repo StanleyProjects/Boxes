@@ -38,9 +38,9 @@ public class BoxTest
             private final String DATE = "date";
             private final String DBL = "dbl";
 
-            public Map write(TestData data)
+            public Map<String, Object> write(TestData data)
             {
-                Map map = new HashMap();
+                Map<String, Object> map = new HashMap<String, Object>();
                 map.put(NUMBER, data.number);
                 map.put(STRING, data.string);
                 map.put(BOOL, data.bool);
@@ -48,7 +48,7 @@ public class BoxTest
                 map.put(DBL, data.dbl);
                 return map;
             }
-            public TestData read(Map map)
+            public TestData read(Map<String, Object> map)
             {
                 return new TestData(((Long)map.get(NUMBER)).intValue(),
                     (String)map.get(STRING),
@@ -329,13 +329,124 @@ public class BoxTest
         }
     }
     @Test
-    public void updateTest()
+    public void getFirstTest()
     {
-        int number = nextInt();
-        String string = nextString();
-        boolean bool = nextBoolean();
-        long date = nextLong();
-        double dbl = nextDouble();
+        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        int count = nextInt(50) + 50;
+        List<TestData> list = new ArrayList<TestData>();
+        final String specialString = nextString();
+        for(int i=0; i<count; i++)
+        {
+            TestData tmp = fakeTestData();
+            while(tmp.string.equals(specialString))
+            {
+                tmp = fakeTestData();
+            }
+            list.add(tmp);
+        }
+        TestData specialTestData = new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble());
+        list.add(specialTestData);
+        Collections.shuffle(list);
+        box.addAll(list);
+        TestData result = box.getFirst(new Query<TestData>()
+        {
+            public boolean query(TestData item)
+            {
+                return item.string.equals(specialString);
+            }
+        });
+        assertEquals("Result test data " + result + " must be equals special test data " + specialTestData + "!", specialTestData, result);
+    }
+    @Test
+    public void getFirstNotFoundTest()
+    {
+        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        int count = nextInt(50) + 50;
+        List<TestData> list = new ArrayList<TestData>();
+        final String specialString = nextString();
+        for(int i=0; i<count; i++)
+        {
+            TestData tmp = fakeTestData();
+            while(tmp.string.equals(specialString))
+            {
+                tmp = fakeTestData();
+            }
+            list.add(tmp);
+        }
+        box.addAll(list);
+        TestData result = box.getFirst(new Query<TestData>()
+        {
+            public boolean query(TestData item)
+            {
+                return item.string.equals(specialString);
+            }
+        });
+        assertNull("Result test data " + result + " must be null!", result);
+    }
+    @Test
+    public void updateFirstTest()
+    {
+        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        int count = nextInt(50) + 50;
+        List<TestData> list = new ArrayList<TestData>();
+        final String specialString = nextString();
+        for(int i=0; i<count; i++)
+        {
+            TestData tmp = fakeTestData();
+            while(tmp.string.equals(specialString))
+            {
+                tmp = fakeTestData();
+            }
+            list.add(tmp);
+        }
+        list.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
+        Collections.shuffle(list);
+        box.addAll(list);
+        TestData updateTestData = new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble());
+        Query<TestData> query = new Query<TestData>()
+        {
+            public boolean query(TestData item)
+            {
+                return item.string.equals(specialString);
+            }
+        };
+        box.updateFirst(query, updateTestData);
+        TestData result = box.getFirst(query);
+        assertEquals("Result test data " + result + " must be equals special test data " + updateTestData + "!", updateTestData, result);
+    }
+    @Test
+    public void updateAllTest()
+    {
+        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        int count = nextInt(50) + 50;
+        List<TestData> list = new ArrayList<TestData>();
+        for(int i=0; i<count; i++)
+        {
+            list.add(fakeTestData());
+        }
+        int specialCount = nextInt(10) + 10;
+        final String specialString = nextString();
+        for(int i=0; i<specialCount; i++)
+        {
+            list.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
+        }
+        Collections.shuffle(list);
+        box.addAll(list);
+        TestData updateTestData = new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble());
+        Query<TestData> query = new Query<TestData>()
+        {
+            public boolean query(TestData item)
+            {
+                return item.string.equals(specialString);
+            }
+        };
+        box.updateAll(query, updateTestData);
+        List<TestData> result = box.get(query);
+        assertEquals("Size of list of test datas with special string "+specialString+" must be equals " + specialCount + "!", specialCount, result.size());
+        for(TestData item: result)
+        {
+            assertEquals("Result test data " + item + " must be equals special test data " + updateTestData + "!", updateTestData, item);
+        }
     }
 
     @After

@@ -7,23 +7,22 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import stan.boxes.json.JSONParser;
 import stan.boxes.json.JSONWriter;
 import stan.boxes.json.ParseException;
 
-public class Case<DATA>
+public class Case<T>
 {
-    private final DATA def;
-    private final ORM<DATA> orm;
+    private final T def;
+    private final ORM<T> orm;
     private final String fullPath;
 
-    public Case(DATA d, ORM<DATA> o, String fp)
+    public Case(T d, ORM<T> o, String path)
     {
         def = d;
         orm = o;
-        fullPath = fp;
+        fullPath = path;
         createNewFile();
     }
     private void createNewFile()
@@ -42,14 +41,14 @@ public class Case<DATA>
         } 
     }
 
-    public DATA get()
+    public T get()
     {
-        DATA data = null;
+        T data = null;
         try
         {
             String json = read(fullPath);
-            Map map = (Map)JSONParser.read(json);
-            Map convert = (Map)map.get("data");
+            Map<String, Object> map = (Map<String, Object>)JSONParser.read(json);
+            Map<String, Object> convert = (Map<String, Object>)map.get("data");
             data = orm.read(convert);
         }
         catch(ParseException e)
@@ -61,7 +60,7 @@ public class Case<DATA>
         }
         return data;
     }
-    public void save(DATA data)
+    public void save(T data)
     {
         Map map = new HashMap();
         map.put("data", orm.write(data));
