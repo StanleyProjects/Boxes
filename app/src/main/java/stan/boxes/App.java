@@ -302,13 +302,13 @@ public class App
         		+"\n\t\tdate " + transactions.get(i).getDate()
         		);
         }
-        transactionsBox.update(new Query<Transaction>()
-        	{
-        		public boolean query(Transaction transaction)
-        		{
-        			return transaction.getId() == 3;
-        		}
-        	}, new Transaction(3,-25,-100));
+        transactionsBox.updateFirst(new Query<Transaction>()
+        {
+            public boolean query(Transaction transaction)
+            {
+                return transaction.getId() == 3;
+            }
+        }, new Transaction(3,-25,-100));
         log("size after replace: " + transactionsBox.getAll().size());
         transactions = transactionsBox.getAll();
         for(int i=0; i<transactions.size(); i++)

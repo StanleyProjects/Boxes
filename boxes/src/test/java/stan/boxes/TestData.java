@@ -10,11 +10,8 @@ public class TestData
 
     TestData(int number, String string, boolean bool, long date, double dbl)
     {
+        if(string == null) throw new IllegalArgumentException("Property \"string\" must be exist!");
         this.number = number;
-        if(string == null)
-        {
-            throw new IllegalArgumentException("Property \"string\" must be exist!");
-        }
         this.string = string;
         this.bool = bool;
         this.date = date;

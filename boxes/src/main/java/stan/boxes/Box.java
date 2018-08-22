@@ -24,15 +24,9 @@ public class Box<T>
 
     public Box(ORM<T> o, String path)
     {
-        if(o == null)
-        {
-            throw new BoxException("Property \"orm\" must be exist!");
-        }
+        if(o == null) throw new BoxException("Property \"orm\" must be exist!");
+        if(path == null) throw new BoxException("Property \"path\" must be exist!");
         orm = o;
-        if(path == null)
-        {
-            throw new BoxException("Property \"path\" must be exist!");
-        }
         fullPath = path;
         createNewFile();
     }
@@ -41,18 +35,12 @@ public class Box<T>
     {
         List<T> list = getAll();
         list.add(data);
-        if(datas != null && datas.length > 0)
-        {
-            Collections.addAll(list, datas);
-        }
+        if(datas != null && datas.length > 0) Collections.addAll(list, datas);
         save(list);
     }
     public void addAll(Collection<T> datas)
     {
-        if(datas == null || datas.isEmpty())
-        {
-            return;
-        }
+        if(datas == null || datas.isEmpty()) return;
         List<T> list = getAll();
         list.addAll(datas);
         save(list);
@@ -60,103 +48,67 @@ public class Box<T>
     public List<T> getAll()
     {
         List<Map<String, Object>> convert = getRaw();
-        if(convert.isEmpty())
-        {
-            return new ArrayList<T>();
-        }
+        if(convert.isEmpty()) return new ArrayList<T>();
         List<T> list = new ArrayList<T>(convert.size());
-        for(Map<String, Object> item: convert)
-        {
-            list.add(orm.read(item));
-        }
+        for(Map<String, Object> item: convert) list.add(orm.read(item));
         return list;
     }
     public List<T> get(Query<T> query)
     {
         List<Map<String, Object>> convert = getRaw();
-        if(convert.isEmpty())
-        {
-            return Collections.emptyList();
-        }
+        if(convert.isEmpty()) return Collections.emptyList();
         List<T> list = new ArrayList<T>(convert.size());
         for(Map<String, Object> item: convert)
         {
             T tmp = orm.read(item);
-            if(query.query(tmp))
-            {
-                list.add(tmp);
-            }
+            if(query.query(tmp)) list.add(tmp);
         }
         return list;
     }
     public List<T> get(Comparator<T> comparator)
     {
         List<T> list = getAll();
-        if(list.size() > 1)
-        {
-            Collections.sort(list, comparator);
-        }
+        if(list.size() > 1) Collections.sort(list, comparator);
         return list;
     }
     public List<T> get(Range range)
     {
         List<T> list = getAll();
-        if(list.isEmpty())
-        {
-            return Collections.emptyList();
-        }
+        if(list.isEmpty()) return Collections.emptyList();
         return list.subList(range.start, range.start + range.count);
     }
     public List<T> get(Query<T> query, Comparator<T> comparator)
     {
         List<T> list = get(query);
-        if(list.size() > 1)
-        {
-            Collections.sort(list, comparator);
-        }
+        if(list.size() > 1) Collections.sort(list, comparator);
         return list;
     }
     public List<T> get(Query<T> query, Range range)
     {
         List<T> list = get(query);
-        if(list.isEmpty())
-        {
-            return Collections.emptyList();
-        }
+        if(list.isEmpty()) return Collections.emptyList();
         return list.subList(range.start, range.start + range.count);
     }
     public List<T> get(Comparator<T> comparator, Range range)
     {
         List<T> list = get(comparator);
-        if(list.isEmpty())
-        {
-            return Collections.emptyList();
-        }
+        if(list.isEmpty()) return Collections.emptyList();
         return list.subList(range.start, range.start + range.count);
     }
     public List<T> get(Query<T> query, Comparator<T> comparator, Range range)
     {
         List<T> list = get(query, comparator);
-        if(list.isEmpty())
-        {
-            return Collections.emptyList();
-        }
+        if(list.isEmpty()) return Collections.emptyList();
         return list.subList(range.start, range.start + range.count);
     }
     public T getFirst(Query<T> query)
     {
         List<Map<String, Object>> convert = getRaw();
-        if(convert.isEmpty())
-        {
-            return null;
-        }
+        if(convert.isEmpty()) return null;
         for(Map<String, Object> item: convert)
         {
             T tmp = orm.read(item);
-            if(query.query(tmp))
-            {
-                return tmp;
-            }
+            if(query.query(tmp)) return tmp;
         }
         return null;
     }
@@ -176,13 +128,7 @@ public class Box<T>
     public void updateAll(Query<T> query, T data)
     {
         List<T> list = getAll();
-        for(int i=0; i<list.size(); i++)
-        {
-            if(query.query(list.get(i)))
-            {
-                list.set(i, data);
-            }
-        }
+        for(int i=0; i<list.size(); i++) if(query.query(list.get(i))) list.set(i, data);
         save(list);
     }
     public void removeFirst(Query<T> query)
@@ -202,17 +148,7 @@ public class Box<T>
     {
         List<T> list = getAll();
         int i=0;
-        while(i<list.size())
-        {
-            if(query.query(list.get(i)))
-            {
-                list.remove(i);
-            }
-            else
-            {
-                i++;
-            }
-        }
+        while(i<list.size()) if(query.query(list.get(i))) list.remove(i); else i++;
         save(list);
     }
     public void clear()
@@ -225,6 +161,8 @@ public class Box<T>
         File boxFile = new File(fullPath);
         if(!boxFile.exists())
         {
+            File parent = boxFile.getParentFile();
+            if(parent != null && !parent.exists()) parent.mkdirs();
             try
             {
                 boxFile.createNewFile();
@@ -275,14 +213,12 @@ public class Box<T>
     private void save(List<T> list)
     {
         List<Map<String, Object>> convert = new ArrayList<Map<String, Object>>(list.size());
-        for(T item : list)
-        {
-            convert.add(orm.write(item));
-        }
+        for(T item : list) convert.add(orm.write(item));
         writeData(convert);
     }
 
-    synchronized private void write(String path, String data) throws IOException
+    synchronized private void write(String path, String data)
+        throws IOException
     {
         FileWriter fileWriter = null;
         try
@@ -292,10 +228,7 @@ public class Box<T>
         }
         finally
         {
-            if(fileWriter != null)
-            {
-                fileWriter.close();
-            }
+            if(fileWriter != null) fileWriter.close();
         }
     }
     synchronized private String read(String path)
@@ -317,10 +250,7 @@ public class Box<T>
         }
         finally
         {
-            if(fileReader != null)
-            {
-                fileReader.close();
-            }
+            if(fileReader != null) fileReader.close();
         }
     }
 }
