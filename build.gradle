@@ -10,7 +10,7 @@ allprojects {
     }
     ext {
         applicationId = 'stan.boxes'
-        versionCode = 1808221846
-        versionName = "0.00.07"
+        versionCode = 1904051605
+        versionName = "0.00.08"
     }
 }
