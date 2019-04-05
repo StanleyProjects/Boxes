@@ -1,6 +1,5 @@
 package stan.boxes;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -11,6 +10,7 @@ import java.util.Map;
 import stan.boxes.json.JSONParser;
 import stan.boxes.json.JSONWriter;
 import stan.boxes.json.ParseException;
+import stan.boxes.util.Util;
 
 public class Case<T>
 {
@@ -20,30 +20,17 @@ public class Case<T>
 
     public Case(T d, ORM<T> o, String path)
     {
+        if(o == null) throw new BoxException("Property \"orm\" must be exist!");
+        if(path == null) throw new BoxException("Property \"path\" must be exist!");
         def = d;
         orm = o;
         fullPath = path;
         createNewFile();
     }
-    private void createNewFile()
-    {
-        File caseFile = new File(fullPath);
-        if(!caseFile.exists())
-        {
-            try
-            {
-                caseFile.createNewFile();
-                save(def);
-            }
-            catch(IOException e)
-            {
-            }
-        } 
-    }
 
     public T get()
     {
-        T data = null;
+        T data;
         try
         {
             String json = read(fullPath);
@@ -54,62 +41,63 @@ public class Case<T>
         catch(ParseException e)
         {
             save(def);
+            data = def;
         }
-        catch(IOException e)
+        catch(Exception e)
         {
+            throw new BoxException(e);
         }
         return data;
     }
     public void save(T data)
     {
-        Map map = new HashMap();
+        Map<String, Object> map = new HashMap<String, Object>();
         map.put("data", orm.write(data));
         map.put("date", System.currentTimeMillis());
-        try
-        {
-            write(fullPath, JSONWriter.write(map));
-        }
-        catch(IOException ex)
-        {
-        }
+        write(fullPath, JSONWriter.write(map));
     }
     public void clear()
     {
         save(def);
     }
 
-    private void write(String fp, String data) throws IOException
+    private void createNewFile()
     {
-        FileWriter fw = null;
+        File file = new File(fullPath);
+        if(file.exists()) return;
+        File parent = file.getParentFile();
+        if(parent != null && !parent.exists()) parent.mkdirs();
         try
-        { 
-            fw = new FileWriter(fp);
-            fw.write(data);
-        }
-        finally
         {
-            fw.close();
+            file.createNewFile();
+        }
+        catch(IOException e)
+        {
+            throw new BoxException(e);
+        }
+        save(def);
+    }
+
+    private void write(String filePath, String data)
+    {
+        try
+        {
+            Util.write(new FileWriter(filePath), data);
+        }
+        catch(IOException e)
+        {
+            throw new BoxException(e);
         }
     }
-    private String read(String fp) throws IOException
+    private String read(String filePath)
     {
-        FileReader fr = null;
         try
         {
-            fr = new FileReader(fp);
-            BufferedReader br = new BufferedReader(fr);
-            StringBuilder sb = new StringBuilder();
-            String line = br.readLine();
-            while(line != null)
-            {
-                sb.append(line);
-                line = br.readLine();
-            }
-            return sb.toString();
+            return Util.read(new FileReader(filePath));
         }
-        finally
+        catch(IOException e)
         {
-            fr.close();
+            throw new BoxException(e);
         }
     }
 }

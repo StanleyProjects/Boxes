@@ -25,12 +25,12 @@ public class BoxTest
         }
     };
 
-    private Box<TestData> box;
+    private Box<TestData> testBox;
 
     @Before
     public void before()
     {
-        box = new Box<TestData>(new ORM<TestData>()
+        testBox = new Box<TestData>(new ORM<TestData>()
         {
             private final String NUMBER = "number";
             private final String STRING = "string";
@@ -56,50 +56,50 @@ public class BoxTest
                     (Long)map.get(DATE),
                     (Double)map.get(DBL));
             }
-        }, System.getProperty("user.home") + "/stan/boxes/test");
-        box.clear();
+        }, System.getProperty("user.home") + "/stan/boxes/testBox");
+        testBox.clear();
     }
 
     @Test
     public void initTest()
     {
-        List<TestData> list = box.getAll();
+        List<TestData> list = testBox.getAll();
         assertNotNull("List of test datas must be exist!", list);
         assertTrue("List of test datas must be empty on init!", list.isEmpty());
     }
     @Test
     public void addTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
-        box.add(fakeTestData());
-        assertEquals("Size of list of test datas must be equals 1!", 1, box.getAll().size());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
+        testBox.add(fakeTestData());
+        assertEquals("Size of list of test datas must be equals 1!", 1, testBox.getAll().size());
     }
     @Test
     public void addAllTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(50) + 50;
         List<TestData> list = new ArrayList<TestData>(count);
         for(int i=0; i<count; i++) list.add(fakeTestData());
-        box.addAll(list);
-        assertEquals("Size of list of test datas must be equals " + count + "!", count, box.getAll().size());
+        testBox.addAll(list);
+        assertEquals("Size of list of test datas must be equals " + count + "!", count, testBox.getAll().size());
     }
     @Test
     public void getAllTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(50) + 50;
         List<TestData> list = new ArrayList<TestData>(count);
         for(int i=0; i<count; i++) list.add(fakeTestData());
-        box.addAll(list);
-        List<TestData> result = box.getAll();
+        testBox.addAll(list);
+        List<TestData> result = testBox.getAll();
         assertEquals("Size of list of test datas must be equals " + count + "!", count, result.size());
         for(TestData item: list) assertTrue("Result list must contains item " + item, result.contains(item));
     }
     @Test
     public void getQueryTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(50) + 50;
         List<TestData> list = new ArrayList<TestData>();
         for(int i=0; i<count; i++) list.add(fakeTestData());
@@ -108,8 +108,8 @@ public class BoxTest
         List<TestData> specialList = new ArrayList<TestData>(specialCount);
         for(int i=0; i<specialCount; i++) specialList.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
         list.addAll(specialList);
-        box.addAll(list);
-        List<TestData> result = box.get(new Query<TestData>()
+        testBox.addAll(list);
+        List<TestData> result = testBox.get(new Query<TestData>()
         {
             public boolean query(TestData item)
             {
@@ -122,12 +122,12 @@ public class BoxTest
     @Test
     public void getComparatorTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(50) + 100;
         List<TestData> list = new ArrayList<TestData>(count);
         for(int i=0; i<count; i++) list.add(fakeTestData());
-        box.addAll(list);
-        List<TestData> result = box.get(testDataNumberComparator);
+        testBox.addAll(list);
+        List<TestData> result = testBox.get(testDataNumberComparator);
         assertEquals("Size of list of test datas must be equals " + count + "!", count, result.size());
         TestData previousItem = result.get(0);
         for(TestData item: result)
@@ -139,14 +139,14 @@ public class BoxTest
     @Test
     public void getRangeTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(100) + 100;
         List<TestData> list = new ArrayList<TestData>(count);
         for(int i=0; i<count; i++) list.add(fakeTestData());
-        box.addAll(list);
+        testBox.addAll(list);
         int rangeStart = nextInt(25) + 25;
         int rangeCount = nextInt(25) + 25;
-        List<TestData> result = box.get(new Range(rangeStart, rangeCount));
+        List<TestData> result = testBox.get(new Range(rangeStart, rangeCount));
         List<TestData> subList = list.subList(rangeStart, rangeStart + rangeCount);
         assertEquals("Size of list of test datas must be equals " + subList.size() + "!", subList.size(), result.size());
         for(TestData item: result) assertTrue("Result list must contains item " + item, subList.contains(item));
@@ -154,7 +154,7 @@ public class BoxTest
     @Test
     public void getQueryComparatorTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(50) + 50;
         List<TestData> list = new ArrayList<TestData>();
         for(int i=0; i<count; i++) list.add(fakeTestData());
@@ -163,8 +163,8 @@ public class BoxTest
         List<TestData> specialList = new ArrayList<TestData>(specialCount);
         for(int i=0; i<specialCount; i++) specialList.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
         list.addAll(specialList);
-        box.addAll(list);
-        List<TestData> result = box.get(new Query<TestData>()
+        testBox.addAll(list);
+        List<TestData> result = testBox.get(new Query<TestData>()
         {
             public boolean query(TestData item)
             {
@@ -189,7 +189,7 @@ public class BoxTest
     @Test
     public void getQueryRangeTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(200) + 300;
         List<TestData> list = new ArrayList<TestData>();
         for(int i=0; i<count; i++) list.add(fakeTestData());
@@ -198,10 +198,10 @@ public class BoxTest
         List<TestData> specialList = new ArrayList<TestData>(specialCount);
         for(int i=0; i<specialCount; i++) specialList.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
         list.addAll(specialList);
-        box.addAll(list);
+        testBox.addAll(list);
         int rangeStart = nextInt(25) + 25;
         int rangeCount = nextInt(25) + 25;
-        List<TestData> result = box.get(new Query<TestData>()
+        List<TestData> result = testBox.get(new Query<TestData>()
         {
             public boolean query(TestData item)
             {
@@ -215,15 +215,15 @@ public class BoxTest
     @Test
     public void getComparatorRangeTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(200) + 300;
         List<TestData> list = new ArrayList<TestData>(count);
         for(int i=0; i<count; i++) list.add(fakeTestData());
         Collections.shuffle(list);
-        box.addAll(list);
+        testBox.addAll(list);
         int rangeStart = nextInt(25) + 25;
         int rangeCount = nextInt(25) + 25;
-        List<TestData> result = box.get(testDataNumberComparator, new Range(rangeStart, rangeCount));
+        List<TestData> result = testBox.get(testDataNumberComparator, new Range(rangeStart, rangeCount));
         Collections.sort(list, testDataNumberComparator);
         List<TestData> subList = list.subList(rangeStart, rangeStart + rangeCount);
         assertEquals("Size of list of test datas must be equals " + subList.size() + "!", subList.size(), result.size());
@@ -242,7 +242,7 @@ public class BoxTest
     @Test
     public void getQueryComparatorRangeTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(200) + 300;
         List<TestData> list = new ArrayList<TestData>(count);
         for(int i=0; i<count; i++) list.add(fakeTestData());
@@ -252,10 +252,10 @@ public class BoxTest
         for(int i=0; i<specialCount; i++) specialList.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
         list.addAll(specialList);
         Collections.shuffle(list);
-        box.addAll(list);
+        testBox.addAll(list);
         int rangeStart = nextInt(25) + 25;
         int rangeCount = nextInt(25) + 25;
-        List<TestData> result = box.get(new Query<TestData>()
+        List<TestData> result = testBox.get(new Query<TestData>()
         {
             public boolean query(TestData item)
             {
@@ -280,7 +280,7 @@ public class BoxTest
     @Test
     public void getFirstTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(50) + 50;
         List<TestData> list = new ArrayList<TestData>();
         final String specialString = nextString();
@@ -293,8 +293,8 @@ public class BoxTest
         TestData specialTestData = new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble());
         list.add(specialTestData);
         Collections.shuffle(list);
-        box.addAll(list);
-        TestData result = box.getFirst(new Query<TestData>()
+        testBox.addAll(list);
+        TestData result = testBox.getFirst(new Query<TestData>()
         {
             public boolean query(TestData item)
             {
@@ -306,7 +306,7 @@ public class BoxTest
     @Test
     public void getFirstNotFoundTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(50) + 50;
         List<TestData> list = new ArrayList<TestData>();
         final String specialString = nextString();
@@ -316,8 +316,8 @@ public class BoxTest
             while(tmp.string.equals(specialString)) tmp = fakeTestData();
             list.add(tmp);
         }
-        box.addAll(list);
-        TestData result = box.getFirst(new Query<TestData>()
+        testBox.addAll(list);
+        TestData result = testBox.getFirst(new Query<TestData>()
         {
             public boolean query(TestData item)
             {
@@ -329,7 +329,7 @@ public class BoxTest
     @Test
     public void updateFirstTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(50) + 50;
         List<TestData> list = new ArrayList<TestData>();
         final String specialString = nextString();
@@ -341,7 +341,7 @@ public class BoxTest
         }
         list.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
         Collections.shuffle(list);
-        box.addAll(list);
+        testBox.addAll(list);
         TestData updateTestData = new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble());
         Query<TestData> query = new Query<TestData>()
         {
@@ -350,14 +350,14 @@ public class BoxTest
                 return item.string.equals(specialString);
             }
         };
-        box.updateFirst(query, updateTestData);
-        TestData result = box.getFirst(query);
+        testBox.updateFirst(query, updateTestData);
+        TestData result = testBox.getFirst(query);
         assertEquals("Result test data " + result + " must be equals special test data " + updateTestData + "!", updateTestData, result);
     }
     @Test
     public void updateAllTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(50) + 50;
         List<TestData> list = new ArrayList<TestData>();
         for(int i=0; i<count; i++) list.add(fakeTestData());
@@ -365,7 +365,7 @@ public class BoxTest
         final String specialString = nextString();
         for(int i=0; i<specialCount; i++) list.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
         Collections.shuffle(list);
-        box.addAll(list);
+        testBox.addAll(list);
         TestData updateTestData = new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble());
         Query<TestData> query = new Query<TestData>()
         {
@@ -374,15 +374,15 @@ public class BoxTest
                 return item.string.equals(specialString);
             }
         };
-        box.updateAll(query, updateTestData);
-        List<TestData> result = box.get(query);
+        testBox.updateAll(query, updateTestData);
+        List<TestData> result = testBox.get(query);
         assertEquals("Size of list of test datas with special string "+specialString+" must be equals " + specialCount + "!", specialCount, result.size());
         for(TestData item: result) assertEquals("Result test data " + item + " must be equals special test data " + updateTestData + "!", updateTestData, item);
     }
     @Test
     public void removeFirstTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(50) + 50;
         List<TestData> list = new ArrayList<TestData>();
         final String specialString = nextString();
@@ -394,7 +394,7 @@ public class BoxTest
         }
         list.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
         Collections.shuffle(list);
-        box.addAll(list);
+        testBox.addAll(list);
         Query<TestData> query = new Query<TestData>()
         {
             public boolean query(TestData item)
@@ -402,16 +402,16 @@ public class BoxTest
                 return item.string.equals(specialString);
             }
         };
-        assertNotNull("Result \"getFirst\" test data must be exist!", box.getFirst(query));
-        assertEquals("Size of list of test datas with special string "+specialString+" must be equals 1!", 1, box.get(query).size());
-        box.removeFirst(query);
-        assertNull("Result \"getFirst\" after \"removeFirst\" must be null!", box.getFirst(query));
-        assertTrue("Result \"get\" after \"removeFirst\" must be empty!", box.get(query).isEmpty());
+        assertNotNull("Result \"getFirst\" test data must be exist!", testBox.getFirst(query));
+        assertEquals("Size of list of test datas with special string "+specialString+" must be equals 1!", 1, testBox.get(query).size());
+        testBox.removeFirst(query);
+        assertNull("Result \"getFirst\" after \"removeFirst\" must be null!", testBox.getFirst(query));
+        assertTrue("Result \"get\" after \"removeFirst\" must be empty!", testBox.get(query).isEmpty());
     }
     @Test
     public void removeAllTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(50) + 50;
         List<TestData> list = new ArrayList<TestData>();
         for(int i=0; i<count; i++) list.add(fakeTestData());
@@ -422,7 +422,7 @@ public class BoxTest
             list.add(new TestData(nextInt(), specialString, nextBoolean(), nextLong(), nextDouble()));
         }
         Collections.shuffle(list);
-        box.addAll(list);
+        testBox.addAll(list);
         Query<TestData> query = new Query<TestData>()
         {
             public boolean query(TestData item)
@@ -430,28 +430,28 @@ public class BoxTest
                 return item.string.equals(specialString);
             }
         };
-        assertEquals("Size of list of test datas with special string "+specialString+" must be equals "+specialCount+"!", specialCount, box.get(query).size());
-        box.removeAll(query);
-        assertTrue("Result \"get\" after \"removeAll\" must be empty!", box.get(query).isEmpty());
-        assertEquals("Size of list of test datas after \"removeAll\" must be equals " + count + "!", count, box.getAll().size());
+        assertEquals("Size of list of test datas with special string "+specialString+" must be equals "+specialCount+"!", specialCount, testBox.get(query).size());
+        testBox.removeAll(query);
+        assertTrue("Result \"get\" after \"removeAll\" must be empty!", testBox.get(query).isEmpty());
+        assertEquals("Size of list of test datas after \"removeAll\" must be equals " + count + "!", count, testBox.getAll().size());
     }
     @Test
     public void clearTest()
     {
-        assertTrue("List of test datas must be empty on init!", box.getAll().isEmpty());
+        assertTrue("List of test datas must be empty on init!", testBox.getAll().isEmpty());
         int count = nextInt(50) + 50;
         List<TestData> list = new ArrayList<TestData>(count);
         for(int i=0; i<count; i++) list.add(fakeTestData());
-        box.addAll(list);
-        assertEquals("Size of list of test datas must be equals " + count + "!", count, box.getAll().size());
-        box.clear();
-        assertTrue("Result \"getAll\" after \"clear\" must be empty!", box.getAll().isEmpty());
+        testBox.addAll(list);
+        assertEquals("Size of list of test datas must be equals " + count + "!", count, testBox.getAll().size());
+        testBox.clear();
+        assertTrue("Result \"getAll\" after \"clear\" must be empty!", testBox.getAll().isEmpty());
     }
 
     @After
     public void after()
     {
-        box.clear();
+        testBox.clear();
     }
 
     private TestData fakeTestData()

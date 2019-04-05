@@ -1,6 +1,5 @@
 package stan.boxes;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -16,6 +15,7 @@ import java.util.Map;
 import stan.boxes.json.JSONParser;
 import stan.boxes.json.JSONWriter;
 import stan.boxes.json.ParseException;
+import stan.boxes.util.Util;
 
 public class Box<T>
 {
@@ -159,20 +159,18 @@ public class Box<T>
     private void createNewFile()
     {
         File boxFile = new File(fullPath);
-        if(!boxFile.exists())
+        if(boxFile.exists()) return;
+        File parent = boxFile.getParentFile();
+        if(parent != null && !parent.exists()) parent.mkdirs();
+        try
         {
-            File parent = boxFile.getParentFile();
-            if(parent != null && !parent.exists()) parent.mkdirs();
-            try
-            {
-                boxFile.createNewFile();
-            }
-            catch(IOException e)
-            {
-                throw new BoxException(e);
-            }
-            writeEmpty();
+            boxFile.createNewFile();
         }
+        catch(IOException e)
+        {
+            throw new BoxException(e);
+        }
+        writeEmpty();
     }
     private List<Map<String, Object>> getRaw()
     {
@@ -181,14 +179,14 @@ public class Box<T>
         {
             convert = (List<Map<String, Object>>)((Map<String, Object>)JSONParser.read(read(fullPath))).get("list");
         }
-        catch(IOException e)
-        {
-            throw new BoxException(e);
-        }
         catch(ParseException e)
         {
             writeEmpty();
             return Collections.emptyList();
+        }
+        catch(Exception e)
+        {
+            throw new BoxException(e);
         }
         return convert;
     }
@@ -197,14 +195,7 @@ public class Box<T>
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("list", object);
         map.put("date", System.currentTimeMillis());
-        try
-        {
-            write(fullPath, JSONWriter.write(map));
-        }
-        catch(IOException e)
-        {
-            throw new BoxException(e);
-        }
+        write(fullPath, JSONWriter.write(map));
     }
     private void writeEmpty()
     {
@@ -217,40 +208,26 @@ public class Box<T>
         writeData(convert);
     }
 
-    synchronized private void write(String path, String data)
-        throws IOException
+    synchronized private void write(String filePath, String data)
     {
-        FileWriter fileWriter = null;
         try
         {
-            fileWriter = new FileWriter(path);
-            fileWriter.write(data);
+            Util.write(new FileWriter(filePath), data);
         }
-        finally
+        catch(IOException e)
         {
-            if(fileWriter != null) fileWriter.close();
+            throw new BoxException(e);
         }
     }
-    synchronized private String read(String path)
-        throws IOException
+    synchronized private String read(String filePath)
     {
-        FileReader fileReader = null;
         try
         {
-            fileReader = new FileReader(path);
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            StringBuilder stringBuilder = new StringBuilder();
-            String line = bufferedReader.readLine();
-            while(line != null)
-            {
-                stringBuilder.append(line);
-                line = bufferedReader.readLine();
-            }
-            return stringBuilder.toString();
+            return Util.read(new FileReader(filePath));
         }
-        finally
+        catch(IOException e)
         {
-            if(fileReader != null) fileReader.close();
+            throw new BoxException(e);
         }
     }
 }
